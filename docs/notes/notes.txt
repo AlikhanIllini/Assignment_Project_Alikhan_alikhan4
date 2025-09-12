@@ -5,14 +5,23 @@
 - Why: same domain, scoped growth; minimal re-learning
 
 # Wireframe Notes
-- v1 screens listed below; why they matter; anything risky/unclear.
+- Goal of v1 wireframes: Keep it tiny and shippable. Prioritize cards + simple filters over charts/analytics.
+- Screens included:
+    - login (ultimate edition only)
+    - dashboard: card grid (ticker, target, conviction 1-5, horizon 1-5, one-line note) + filters.
+    - create/edit card: tight form; "last price" field (API)
+    - empty/error: first-run blank state, basic validation and network error copy.
 
 # Branching Strategy
-- main (protected), develop (integration), feature/* per weekly topic,
-  release/* before demos, hotfix/* for urgent fixes.
+- Strategy chosen: Simple Gitflow
+    - main (protected, demo-ready)
+    - develop (integration)
+    - feature/ per weekly topic -> merge back to develop
+    - release/ before demos -> merge to main
+    - hotfix/ from main for urgent fixes -> merge back to develop
 
-# Branch Usage Reflections
-- Which branch I used for wireframes, what I pushed, any issues.
+- Planned feature branches (Lite):
+    - feature/models -> feature/crud -> feature/ui -> feature/reporting -> feature/api
 
 # Django Setup
 - startproject folder name chosen: appserver; app name: cards — simple and clear.
