@@ -1,0 +1,8 @@
+Task Board - Create/Edit Task Wireframe
+This represents a form with:
+- Title field (required)
+- Description textarea (optional)
+- Priority dropdown (Low/Medium/High)
+- Due date picker (optional)
+- Save/Cancel buttons
+

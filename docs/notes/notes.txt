@@ -1,16 +1,13 @@
 # Ideas & Selection Rationale
-- Assignment ideas: Stock Cards Lite
-- Final ideas: Stock Cards — Ultimate
-- Selected: Stock Cards Lite (Assignment), Stock Cards — Ultimate (Final)
-- Why: same domain, scoped growth; minimal re-learning
+- Assignment ideas: Task Board
+- Simple kanban workflow, clear task management, minimal dependencies
 
 # Wireframe Notes
-- Goal of v1 wireframes: Keep it tiny and shippable. Prioritize cards + simple filters over charts/analytics.
+- Goal of v1 wireframes: Keep it tiny and shippable. Prioritize task board with three columns (To Do, In Progress, Done) + simple task creation.
 - Screens included:
-    - login (ultimate edition only)
-    - dashboard: card grid (ticker, target, conviction 1-5, horizon 1-5, one-line note) + filters.
-    - create/edit card: tight form; "last price" field (API)
-    - empty/error: first-run blank state, basic validation and network error copy.
+    - Board view: three-column kanban layout with task cards showing title, priority, due date
+    - Create/Edit task: form with title, description, priority dropdown, optional due date
+    - Empty/Error: first-run blank state, basic validation errors
 
 # Branching Strategy
 - Strategy chosen: Simple Gitflow
@@ -20,11 +17,28 @@
     - release/ before demos -> merge to main
     - hotfix/ from main for urgent fixes -> merge back to develop
 
-- Planned feature branches (Lite):
-    - feature/models -> feature/crud -> feature/ui -> feature/reporting -> feature/api
+- Planned feature branches (Task Board):
+    - feature/models -> feature/crud -> feature/ui -> feature/board -> feature/admin
 
-# Django Setup
-- startproject folder name chosen: appserver; app name: cards — simple and clear.
+# Django Setup (Task Board)
+- startproject folder name chosen: appserver; app name: tasks — simple and clear for task management.
+
+# Data Model Design
+- **Models Created**: `Project` and `Task`.
+- **Fields**:
+    - `Project`: `name`, `description`, `owner`, `created_at`.
+    - `Task`: `title`, `description`, `project`, `priority`, `status`, `due_date`, `created_at`, `updated_at`.
+- **Relationships**:
+    - `Task.project`: A `ForeignKey` to `Project`. This creates a one-to-many relationship where a project can have multiple tasks. `on_delete=models.CASCADE` was chosen so that if a project is deleted, all its associated tasks are also deleted. This keeps the database clean and avoids orphaned tasks.
+    - `Project.owner`: A `ForeignKey` to the `User` model. This assigns ownership of a project to a user. `on_delete=models.CASCADE` means if a user is deleted, their projects (and by extension, their tasks) are also deleted.
+- **Constraints**:
+    - `UniqueConstraint(fields=['project', 'title'], name='unique_task_title_in_project')` in the `Task` model ensures that no two tasks within the same project can have the same title. This prevents duplicate tasks.
+    - `ordering = ["name"]` in `Project` and `ordering = ["status", "-priority", "due_date", "-created_at"]` in `Task` provide default sorting for querysets, which is useful for consistent presentation.
+- **Seeding Data**:
+    - A superuser was created to own the projects.
+    - Two projects were created: "Website Redesign" and "Mobile App Development".
+    - Several tasks were created for each project with different priorities, statuses, and due dates to simulate a real-world scenario.
+    - A duplicate task was attempted to be created to test the `UniqueConstraint`.
 
 # Virtual Environment Choice
 - Using Python venv because it's simple and works with PyCharm auto-detect.

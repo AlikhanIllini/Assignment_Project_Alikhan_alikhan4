@@ -1,0 +1,5 @@
+Task Board - Empty/Error States Wireframe
+This represents:
+- Empty state: "No tasks yet" message with "Create your first task" button
+- Error states: Validation messages for required fields, network error handling
+

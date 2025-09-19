@@ -1,0 +1,18 @@
+Task Board - Simple Gitflow Branching Strategy
+
+main (protected, demo-ready)
+  ↑
+release/
+  ↑
+develop (integration)
+  ↑
+feature/models → feature/crud → feature/ui → feature/board → feature/admin
+  ↑
+hotfix/ (urgent fixes from main → back to develop)
+
+Flow:
+1. Feature branches created from develop
+2. Features merged back to develop
+3. Release branches created from develop for demos
+4. Releases merged to main
+5. Hotfixes branch from main and merge back to both main and develop
