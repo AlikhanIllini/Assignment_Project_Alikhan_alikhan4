@@ -1,0 +1,85 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}Task Board - Kanban View{% endblock %}
+
+{% block header %}Task Board - Kanban View{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+    <!-- TO DO Column -->
+    <div class="card">
+        <h2 style="text-align: center; color: #6c757d;">To Do ({{ todo_tasks.count }})</h2>
+        {% for task in todo_tasks %}
+            <div class="card status-todo priority-{{ task.get_priority_display|lower }}">
+                <h4>{{ task.title }}</h4>
+                <p>{{ task.description|truncatewords:10 }}</p>
+                <p><strong>Project:</strong> {{ task.project.name }}</p>
+                <p><strong>Priority:</strong> {{ task.get_priority_display }}</p>
+                {% if task.due_date %}
+                    <p><strong>Due:</strong> {{ task.due_date }}</p>
+                    {% if task.is_overdue %}
+                        <span style="color: #e74c3c; font-weight: bold;">⚠️ OVERDUE</span>
+                    {% endif %}
+                {% endif %}
+            </div>
+        {% empty %}
+            <div class="card">
+                <p style="text-align: center; color: #6c757d;">No tasks to do! 🎉</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- IN PROGRESS Column -->
+    <div class="card">
+        <h2 style="text-align: center; color: #f39c12;">In Progress ({{ doing_tasks.count }})</h2>
+        {% for task in doing_tasks %}
+            <div class="card status-doing priority-{{ task.get_priority_display|lower }}">
+                <h4>{{ task.title }}</h4>
+                <p>{{ task.description|truncatewords:10 }}</p>
+                <p><strong>Project:</strong> {{ task.project.name }}</p>
+                <p><strong>Priority:</strong> {{ task.get_priority_display }}</p>
+                {% if task.due_date %}
+                    <p><strong>Due:</strong> {{ task.due_date }}</p>
+                    {% if task.is_overdue %}
+                        <span style="color: #e74c3c; font-weight: bold;">⚠️ OVERDUE</span>
+                    {% endif %}
+                {% endif %}
+            </div>
+        {% empty %}
+            <div class="card">
+                <p style="text-align: center; color: #6c757d;">Nothing in progress</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- DONE Column -->
+    <div class="card">
+        <h2 style="text-align: center; color: #27ae60;">Done ({{ done_tasks.count }})</h2>
+        {% for task in done_tasks %}
+            <div class="card status-done priority-{{ task.get_priority_display|lower }}">
+                <h4>{{ task.title }}</h4>
+                <p>{{ task.description|truncatewords:10 }}</p>
+                <p><strong>Project:</strong> {{ task.project.name }}</p>
+                <p><strong>Priority:</strong> {{ task.get_priority_display }}</p>
+                {% if task.due_date %}
+                    <p><strong>Due:</strong> {{ task.due_date }}</p>
+                {% endif %}
+                <span style="color: #27ae60;">✅ Completed</span>
+            </div>
+        {% empty %}
+            <div class="card">
+                <p style="text-align: center; color: #6c757d;">No completed tasks yet</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% if overdue_tasks %}
+<div class="card overdue" style="margin-top: 2rem;">
+    <h3 style="color: #e74c3c;">⚠️ Overdue Tasks ({{ overdue_tasks.count }})</h3>
+    {% for task in overdue_tasks %}
+        <p>• {{ task.title }} ({{ task.project.name }}) - Due: {{ task.due_date }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

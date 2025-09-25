@@ -1,0 +1,60 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}{{ priority_name }} Priority Tasks{% endblock %}
+
+{% block header %}{{ priority_name }} Priority Tasks ({{ total_count }}){% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Filter: {{ priority_name }} Priority Tasks</h2>
+    <p>Showing all tasks with <strong>{{ priority_name }}</strong> priority level</p>
+
+    <div style="margin: 1rem 0;">
+        <a href="{% url 'tasks_by_priority' 3 %}" style="margin-right: 0.5rem; padding: 0.5rem 1rem; background-color: #e74c3c; color: white; text-decoration: none; border-radius: 4px;">High Priority</a>
+        <a href="{% url 'tasks_by_priority' 2 %}" style="margin-right: 0.5rem; padding: 0.5rem 1rem; background-color: #f39c12; color: white; text-decoration: none; border-radius: 4px;">Medium Priority</a>
+        <a href="{% url 'tasks_by_priority' 1 %}" style="margin-right: 0.5rem; padding: 0.5rem 1rem; background-color: #27ae60; color: white; text-decoration: none; border-radius: 4px;">Low Priority</a>
+    </div>
+</div>
+
+<div class="card">
+    <h3>Tasks ({{ total_count }} found)</h3>
+    {% for task in tasks %}
+        <div class="card priority-{{ task.get_priority_display|lower }} status-{{ task.get_status_display|lower|cut:' ' }}">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                    <h4>{{ task.title }}</h4>
+                    <p>{{ task.description }}</p>
+                    <p><strong>Project:</strong> {{ task.project.name }}</p>
+                </div>
+                <div style="text-align: right;">
+                    <span class="badge" style="background-color:
+                        {% if task.priority == 3 %}#e74c3c{% elif task.priority == 2 %}#f39c12{% else %}#27ae60{% endif %};
+                        color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">
+                        {{ task.get_priority_display }}
+                    </span>
+                    <br>
+                    <span class="badge" style="background-color:
+                        {% if task.status == 1 %}#6c757d{% elif task.status == 2 %}#f39c12{% else %}#27ae60{% endif %};
+                        color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-top: 0.25rem;">
+                        {{ task.get_status_display }}
+                    </span>
+                </div>
+            </div>
+            {% if task.due_date %}
+                <p><strong>Due Date:</strong> {{ task.due_date|date:"M d, Y" }}
+                {% if task.is_overdue %}
+                    <span style="color: #e74c3c; font-weight: bold;">⚠️ OVERDUE</span>
+                {% endif %}
+                </p>
+            {% endif %}
+            <p><small>Created: {{ task.created_at|date:"M d, Y" }}</small></p>
+        </div>
+    {% empty %}
+        <div class="card" style="text-align: center; color: #6c757d; padding: 2rem;">
+            <h4>No {{ priority_name|lower }} priority tasks found</h4>
+            <p>There are currently no tasks with {{ priority_name|lower }} priority in the system.</p>
+            <p>Try viewing tasks with different priority levels using the buttons above.</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
