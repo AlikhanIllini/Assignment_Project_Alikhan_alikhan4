@@ -42,3 +42,25 @@
 
 # Virtual Environment Choice
 - Using Python venv because it's simple and works with PyCharm auto-detect.
+
+# Assignment 4 - Django Views Implementation
+
+## Why I Wrote Two Views
+- **HttpResponse View (task_stats)**: Demonstrates manual HTML construction without Django's template system. This shows the low-level approach where you have complete control over the HTML output but must handle everything manually.
+- **render() View (task_board)**: Uses Django's template system with context passing. This is the preferred Django approach as it separates logic from presentation and enables template inheritance.
+
+## Differences Between HttpResponse and render()
+- **HttpResponse**: Returns raw HTML strings constructed in Python. Requires manual HTML escaping and styling. Good for simple responses or API endpoints. Less maintainable for complex pages.
+- **render()**: Uses Django templates with context dictionaries. Supports template inheritance, filters, tags, and automatic HTML escaping. More maintainable and follows Django best practices.
+
+## URL and Template Decisions
+- **Separate URLs**: Created distinct URLs (/tasks/stats/ and /tasks/) to clearly demonstrate both approaches working independently.
+- **Template Inheritance**: Used base.html with {% block %} structure to maintain consistent navigation and styling across all pages.
+- **{% for %} with {% empty %}**: Implemented in all list templates to gracefully handle empty querysets with user-friendly messages.
+- **Context Strategy**: Passed multiple querysets in render() view to organize tasks by status, enabling the kanban board layout.
+
+## Key Learning Points
+- HttpResponse requires manual work but gives complete control
+- render() leverages Django's powerful template system for cleaner, more maintainable code
+- Both approaches can use the same underlying data and business logic
+- Template inheritance eliminates code duplication across pages

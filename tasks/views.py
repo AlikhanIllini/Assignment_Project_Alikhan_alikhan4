@@ -5,10 +5,10 @@ from django.utils import timezone
 from .models import Project, Task, Status, Priority
 import json
 
-# View 1: HttpResponse view - API-style task count
+# View 1: HttpResponse view - Manual HTML response
 def task_stats(request):
     """
-    HttpResponse view that returns task statistics as JSON
+    HttpResponse view that returns HTML manually (not using render shortcut)
     Shows total tasks, completed tasks, and overdue tasks
     """
     total_tasks = Task.objects.count()
@@ -18,14 +18,65 @@ def task_stats(request):
         status__in=[Status.TODO, Status.DOING]
     ).count()
 
-    stats = {
-        'total_tasks': total_tasks,
-        'completed_tasks': completed_tasks,
-        'overdue_tasks': overdue_tasks,
-        'completion_rate': f"{(completed_tasks/total_tasks*100):.1f}%" if total_tasks > 0 else "0%"
-    }
+    completion_rate = f"{(completed_tasks/total_tasks*100):.1f}%" if total_tasks > 0 else "0%"
 
-    return HttpResponse(json.dumps(stats), content_type='application/json')
+    # Manual HTML string construction (HttpResponse style)
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Task Statistics</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }}
+            .stats-container {{ background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+            .stat-box {{ display: inline-block; margin: 15px; padding: 20px; border-radius: 5px; text-align: center; color: white; min-width: 120px; }}
+            .total {{ background: #3498db; }}
+            .completed {{ background: #27ae60; }}
+            .overdue {{ background: #e74c3c; }}
+            .rate {{ background: #9b59b6; }}
+            h1 {{ color: #2c3e50; }}
+            .nav {{ margin-bottom: 20px; }}
+            .nav a {{ margin-right: 15px; padding: 8px 15px; background: #34495e; color: white; text-decoration: none; border-radius: 4px; }}
+        </style>
+    </head>
+    <body>
+        <div class="stats-container">
+            <h1>📊 Task Statistics Dashboard</h1>
+            <div class="nav">
+                <a href="/">Home</a>
+                <a href="/tasks/">Task Board</a>
+                <a href="/tasks/stats/">Statistics</a>
+            </div>
+            
+            <div class="stat-box total">
+                <h2>{total_tasks}</h2>
+                <p>Total Tasks</p>
+            </div>
+            
+            <div class="stat-box completed">
+                <h2>{completed_tasks}</h2>
+                <p>Completed</p>
+            </div>
+            
+            <div class="stat-box overdue">
+                <h2>{overdue_tasks}</h2>
+                <p>Overdue</p>
+            </div>
+            
+            <div class="stat-box rate">
+                <h2>{completion_rate}</h2>
+                <p>Completion Rate</p>
+            </div>
+            
+            <p style="margin-top: 30px; color: #7f8c8d;">
+                <strong>Note:</strong> This page is generated using HttpResponse with manual HTML construction.
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+
+    return HttpResponse(html)
 
 # View 2: render() view - Main task board
 def task_board(request):
