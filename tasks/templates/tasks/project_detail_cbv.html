@@ -1,0 +1,85 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}{{ project.name }} - DetailView{% endblock %}
+
+{% block header %}🗂️ {{ project.name }} (Class-Based DetailView){% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>{{ project.name }}</h2>
+    <p>{{ project.description }}</p>
+    <p><strong>Owner:</strong> {{ project.owner.username }}</p>
+    <p><strong>Created:</strong> {{ project.created_at|date:"M d, Y" }}</p>
+
+    <p><em>This page is generated using Django's generic DetailView with custom context data.</em></p>
+
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: 1rem 0;">
+        <div class="card" style="text-align: center; background-color: #f8f9fa;">
+            <h3>{{ task_counts.total }}</h3>
+            <p>Total Tasks</p>
+        </div>
+        <div class="card" style="text-align: center; background-color: #fff3cd;">
+            <h3>{{ task_counts.todo }}</h3>
+            <p>To Do</p>
+        </div>
+        <div class="card" style="text-align: center; background-color: #ffeaa7;">
+            <h3>{{ task_counts.doing }}</h3>
+            <p>In Progress</p>
+        </div>
+        <div class="card" style="text-align: center; background-color: #d4edda;">
+            <h3>{{ task_counts.done }}</h3>
+            <p>Completed</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>All Tasks in This Project</h3>
+    {% for task in tasks %}
+        <div class="card priority-{{ task.get_priority_display|lower }} status-{{ task.get_status_display|lower|cut:' ' }}">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                    <h4>{{ task.title }}</h4>
+                    <p>{{ task.description }}</p>
+                </div>
+                <div style="text-align: right;">
+                    <span style="background-color:
+                        {% if task.priority == 3 %}#e74c3c{% elif task.priority == 2 %}#f39c12{% else %}#27ae60{% endif %};
+                        color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">
+                        {{ task.get_priority_display }}
+                    </span>
+                    <br>
+                    <span style="background-color:
+                        {% if task.status == 1 %}#6c757d{% elif task.status == 2 %}#f39c12{% else %}#27ae60{% endif %};
+                        color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-top: 0.25rem;">
+                        {{ task.get_status_display }}
+                    </span>
+                </div>
+            </div>
+            {% if task.due_date %}
+                <p><strong>Due Date:</strong> {{ task.due_date|date:"M d, Y" }}
+                {% if task.is_overdue %}
+                    <span style="color: #e74c3c; font-weight: bold;">⚠️ OVERDUE</span>
+                {% endif %}
+                </p>
+            {% endif %}
+            <p><small>Created: {{ task.created_at|date:"M d, Y" }} | Updated: {{ task.updated_at|date:"M d, Y" }}</small></p>
+        </div>
+    {% empty %}
+        <div class="card" style="text-align: center; color: #6c757d; padding: 2rem;">
+            <h4>No tasks in this project yet</h4>
+            <p>This project is empty. Tasks will appear here once they are created.</p>
+            <a href="{% url 'task_create_cbv' %}" style="padding: 0.5rem 1rem; background: #27ae60; color: white; text-decoration: none; border-radius: 4px;">Create First Task</a>
+        </div>
+    {% endfor %}
+</div>
+
+{% if overdue_tasks %}
+<div class="card" style="border-left: 4px solid #e74c3c;">
+    <h3 style="color: #e74c3c;">⚠️ Overdue Tasks in This Project</h3>
+    {% for task in overdue_tasks %}
+        <p>• {{ task.title }} - Due: {{ task.due_date|date:"M d, Y" }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,16 +1,19 @@
 from django.urls import path
 from . import views
 
+# Import class-based views
+from .views import TaskStatsView, TaskListView, ProjectDetailView, TaskCreateView
+
 urlpatterns = [
-    # Main task board view (render)
+    # Function-based views (Assignment 4)
     path('', views.task_board, name='task_board'),
-
-    # Task statistics API (HttpResponse)
     path('stats/', views.task_stats, name='task_stats'),
-
-    # Project detail view
     path('project/<int:project_id>/', views.project_detail, name='project_detail'),
-
-    # Tasks filtered by priority
     path('priority/<int:priority_level>/', views.tasks_by_priority, name='tasks_by_priority'),
+
+    # Class-based views (Assignment 5)
+    path('cbv/', TaskListView.as_view(), name='task_list_cbv'),
+    path('cbv/stats/', TaskStatsView.as_view(), name='task_stats_cbv'),
+    path('cbv/project/<int:pk>/', ProjectDetailView.as_view(), name='project_detail_cbv'),
+    path('cbv/create/', TaskCreateView.as_view(), name='task_create_cbv'),
 ]

@@ -158,3 +158,101 @@ def tasks_by_priority(request, priority_level):
     }
 
     return render(request, 'tasks/tasks_by_priority.html', context)
+
+# ASSIGNMENT 5 - CLASS-BASED VIEWS
+
+from django.views import View
+from django.views.generic import ListView, DetailView, CreateView
+from django.urls import reverse_lazy
+from django.contrib import messages
+
+# Class-Based View 1: Base View (inheriting from View)
+class TaskStatsView(View):
+    """
+    Base class-based view that manually handles GET requests
+    Shows task statistics using class-based approach
+    """
+    def get(self, request):
+        total_tasks = Task.objects.count()
+        completed_tasks = Task.objects.filter(status=Status.DONE).count()
+        overdue_tasks = Task.objects.filter(
+            due_date__lt=timezone.localdate(),
+            status__in=[Status.TODO, Status.DOING]
+        ).count()
+
+        context = {
+            'total_tasks': total_tasks,
+            'completed_tasks': completed_tasks,
+            'overdue_tasks': overdue_tasks,
+            'completion_rate': f"{(completed_tasks/total_tasks*100):.1f}%" if total_tasks > 0 else "0%"
+        }
+
+        return render(request, 'tasks/stats.html', context)
+
+# Class-Based View 2: Generic ListView
+class TaskListView(ListView):
+    """
+    Generic ListView showing all tasks with filtering and pagination
+    """
+    model = Task
+    template_name = 'tasks/task_list.html'
+    context_object_name = 'tasks'
+    paginate_by = 10
+    ordering = ['status', '-priority', 'due_date']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['projects'] = Project.objects.all()
+        context['total_count'] = Task.objects.count()
+        context['status_counts'] = {
+            'todo': Task.objects.filter(status=Status.TODO).count(),
+            'doing': Task.objects.filter(status=Status.DOING).count(),
+            'done': Task.objects.filter(status=Status.DONE).count(),
+        }
+        return context
+
+# Class-Based View 3: Generic DetailView
+class ProjectDetailView(DetailView):
+    """
+    Generic DetailView for individual project with all its tasks
+    """
+    model = Project
+    template_name = 'tasks/project_detail_cbv.html'
+    context_object_name = 'project'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        project = self.get_object()
+        tasks = project.tasks.all()
+
+        context['tasks'] = tasks
+        context['task_counts'] = {
+            'total': tasks.count(),
+            'todo': tasks.filter(status=Status.TODO).count(),
+            'doing': tasks.filter(status=Status.DOING).count(),
+            'done': tasks.filter(status=Status.DONE).count(),
+        }
+        context['overdue_tasks'] = tasks.filter(
+            due_date__lt=timezone.localdate(),
+            status__in=[Status.TODO, Status.DOING]
+        )
+        return context
+
+# Class-Based View 4: Extra View - CreateView for Tasks
+class TaskCreateView(CreateView):
+    """
+    Generic CreateView for creating new tasks
+    """
+    model = Task
+    template_name = 'tasks/task_create.html'
+    fields = ['title', 'description', 'project', 'priority', 'status', 'due_date']
+    success_url = reverse_lazy('task_list_cbv')
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Task "{form.instance.title}" created successfully!')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['projects'] = Project.objects.all()
+        return context

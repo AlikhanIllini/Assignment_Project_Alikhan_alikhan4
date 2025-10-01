@@ -1,0 +1,115 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}Create New Task - CreateView{% endblock %}
+
+{% block header %}➕ Create New Task (Class-Based CreateView){% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Create New Task</h2>
+    <p><em>This form is generated using Django's generic CreateView with automatic form handling.</em></p>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" style="max-width: 600px;">
+        {% csrf_token %}
+
+        <div style="margin-bottom: 1rem;">
+            <label for="{{ form.title.id_for_label }}" style="display: block; font-weight: bold; margin-bottom: 0.5rem;">Title *</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+                <div style="color: #e74c3c; font-size: 0.9em;">{{ form.title.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            <label for="{{ form.description.id_for_label }}" style="display: block; font-weight: bold; margin-bottom: 0.5rem;">Description</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+                <div style="color: #e74c3c; font-size: 0.9em;">{{ form.description.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            <label for="{{ form.project.id_for_label }}" style="display: block; font-weight: bold; margin-bottom: 0.5rem;">Project *</label>
+            {{ form.project }}
+            {% if form.project.errors %}
+                <div style="color: #e74c3c; font-size: 0.9em;">{{ form.project.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+                <label for="{{ form.priority.id_for_label }}" style="display: block; font-weight: bold; margin-bottom: 0.5rem;">Priority</label>
+                {{ form.priority }}
+                {% if form.priority.errors %}
+                    <div style="color: #e74c3c; font-size: 0.9em;">{{ form.priority.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.status.id_for_label }}" style="display: block; font-weight: bold; margin-bottom: 0.5rem;">Status</label>
+                {{ form.status }}
+                {% if form.status.errors %}
+                    <div style="color: #e74c3c; font-size: 0.9em;">{{ form.status.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            <label for="{{ form.due_date.id_for_label }}" style="display: block; font-weight: bold; margin-bottom: 0.5rem;">Due Date (Optional)</label>
+            {{ form.due_date }}
+            {% if form.due_date.errors %}
+                <div style="color: #e74c3c; font-size: 0.9em;">{{ form.due_date.errors }}</div>
+            {% endif %}
+            <small style="color: #6c757d;">Format: YYYY-MM-DD</small>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <button type="submit" style="padding: 0.75rem 1.5rem; background: #27ae60; color: white; border: none; border-radius: 4px; font-size: 1rem; cursor: pointer; margin-right: 1rem;">
+                ✅ Create Task
+            </button>
+            <a href="{% url 'task_list_cbv' %}" style="padding: 0.75rem 1.5rem; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">
+                ❌ Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h3>📝 CreateView Features</h3>
+    <ul>
+        <li>✅ Automatic form generation from model fields</li>
+        <li>✅ Built-in form validation and error handling</li>
+        <li>✅ Automatic redirect after successful creation</li>
+        <li>✅ CSRF protection included</li>
+        <li>✅ Success messages with Django messages framework</li>
+    </ul>
+</div>
+
+<style>
+    input[type="text"], input[type="date"], textarea, select {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        box-sizing: border-box;
+    }
+
+    textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    button:hover {
+        background: #229954 !important;
+    }
+</style>
+{% endblock %}

@@ -6,6 +6,10 @@ A simple kanban task app with To Do, In Progress, and Done columns. Create tasks
 
 Added comprehensive Django view functionality with two distinct approaches: an HttpResponse view that manually constructs HTML for task statistics, and a render() view that uses templates for the main kanban board. Both demonstrate the full request → view → template → response cycle with proper URL routing and template inheritance.
 
+## Assignment 5 Updates
+
+Implemented class-based views (CBVs) alongside existing function-based views to demonstrate Django's object-oriented approach to handling HTTP requests. Added base View, generic ListView, DetailView, and CreateView with proper URL refactoring using include() and app-level routing with named URL patterns for reverse lookups.
+
 ## Data Model
 
 ![ER Diagram](docs/notes/er_diagram.png)

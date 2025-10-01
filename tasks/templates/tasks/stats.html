@@ -1,0 +1,45 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}Task Statistics{% endblock %}
+
+{% block header %}📊 Task Statistics Dashboard{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+    <div class="card" style="text-align: center; background: linear-gradient(135deg, #3498db, #2980b9); color: white;">
+        <h2 style="font-size: 2.5em; margin: 0;">{{ total_tasks }}</h2>
+        <p style="margin: 0.5rem 0;">Total Tasks</p>
+    </div>
+
+    <div class="card" style="text-align: center; background: linear-gradient(135deg, #27ae60, #229954); color: white;">
+        <h2 style="font-size: 2.5em; margin: 0;">{{ completed_tasks }}</h2>
+        <p style="margin: 0.5rem 0;">Completed</p>
+    </div>
+
+    <div class="card" style="text-align: center; background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;">
+        <h2 style="font-size: 2.5em; margin: 0;">{{ overdue_tasks }}</h2>
+        <p style="margin: 0.5rem 0;">Overdue</p>
+    </div>
+
+    <div class="card" style="text-align: center; background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white;">
+        <h2 style="font-size: 2.5em; margin: 0;">{{ completion_rate }}</h2>
+        <p style="margin: 0.5rem 0;">Completion Rate</p>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📈 Quick Stats</h3>
+    <p><strong>Note:</strong> This page is generated using a class-based View (inheriting from View) that manually handles GET requests.</p>
+    <p>The view processes the request, queries the database, and passes context data to this template for rendering.</p>
+
+    <div style="margin-top: 2rem;">
+        <h4>Class-Based View Benefits:</h4>
+        <ul>
+            <li>✅ Method-based dispatch (GET, POST, etc.)</li>
+            <li>✅ Better code organization and reusability</li>
+            <li>✅ Built-in HTTP method handling</li>
+            <li>✅ Easy to extend and customize</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
