@@ -30,9 +30,9 @@
         <nav class="nav">
             <a href="{% url 'task_board' %}">Board (FBV)</a>
             <a href="{% url 'task_stats' %}">Stats (FBV)</a>
-            <a href="{% url 'task_list_cbv' %}">Tasks (CBV)</a>
-            <a href="{% url 'task_stats_cbv' %}">Stats (CBV)</a>
-            <a href="{% url 'task_create_cbv' %}">Create Task</a>
+            <a href="{% url 'task_list_cbv' %}">Tasks (Generic CBV)</a>
+            <a href="{% url 'task_stats_cbv' %}">Stats (Base CBV)</a>
+            <a href="{% url 'task_create_cbv' %}">Create Task (CBV)</a>
             {% for project in projects %}
                 <a href="{% url 'project_detail_cbv' project.id %}">{{ project.name }}</a>
             {% empty %}

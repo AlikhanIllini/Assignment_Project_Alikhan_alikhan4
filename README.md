@@ -10,6 +10,10 @@ Added comprehensive Django view functionality with two distinct approaches: an H
 
 Implemented class-based views (CBVs) alongside existing function-based views to demonstrate Django's object-oriented approach to handling HTTP requests. Added base View, generic ListView, DetailView, and CreateView with proper URL refactoring using include() and app-level routing with named URL patterns for reverse lookups.
 
+## Assignment 6 Updates
+
+Extended the project with comprehensive comparison between BASE class-based views and GENERIC class-based views. Implemented manual View inheritance for statistics with explicit model queries, alongside Django's generic ListView, DetailView, and CreateView that automatically handle common patterns. This demonstrates the trade-off between control and convenience in Django's CBV architecture.
+
 ## Data Model
 
 ![ER Diagram](docs/notes/er_diagram.png)

@@ -1,0 +1,47 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}Task Statistics - Base CBV{% endblock %}
+
+{% block header %}📊 Task Statistics (Base Class-Based View){% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Statistics Dashboard</h2>
+    <p><em>This page is generated using a BASE class-based view inheriting from View with manual GET handling.</em></p>
+
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: 2rem 0;">
+        <div class="card" style="text-align: center; background: linear-gradient(135deg, #3498db, #2980b9); color: white;">
+            <h2 style="font-size: 2.5em; margin: 0;">{{ stats_data.total_tasks }}</h2>
+            <p style="margin: 0.5rem 0;">Total Tasks</p>
+        </div>
+
+        <div class="card" style="text-align: center; background: linear-gradient(135deg, #27ae60, #229954); color: white;">
+            <h2 style="font-size: 2.5em; margin: 0;">{{ stats_data.completed_tasks }}</h2>
+            <p style="margin: 0.5rem 0;">Completed</p>
+        </div>
+
+        <div class="card" style="text-align: center; background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;">
+            <h2 style="font-size: 2.5em; margin: 0;">{{ stats_data.overdue_tasks }}</h2>
+            <p style="margin: 0.5rem 0;">Overdue</p>
+        </div>
+
+        <div class="card" style="text-align: center; background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white;">
+            <h2 style="font-size: 2.5em; margin: 0;">{{ stats_data.completion_rate }}</h2>
+            <p style="margin: 0.5rem 0;">Completion Rate</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>🔧 Base CBV Features</h3>
+    <ul>
+        <li><strong>Manual Implementation:</strong> Inherits from Django's base View class</li>
+        <li><strong>Explicit Queries:</strong> Uses Task.objects.count(), Task.objects.filter() manually</li>
+        <li><strong>Custom Context:</strong> Creates context dictionary with custom variable names</li>
+        <li><strong>Method Handling:</strong> Implements get() method explicitly</li>
+        <li><strong>Full Control:</strong> Complete control over request/response cycle</li>
+    </ul>
+
+    <p><strong>Note:</strong> This demonstrates the difference from generic CBVs - you write all the logic yourself!</p>
+</div>
+{% endblock %}

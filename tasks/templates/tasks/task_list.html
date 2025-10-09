@@ -1,0 +1,227 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}All Tasks - Search & Aggregations{% endblock %}
+
+{% block header %}🔍 Task Search & Analytics{% endblock %}
+
+{% block content %}
+<!-- SEARCH FORM -->
+<div class="card">
+    <h2>Search Tasks</h2>
+    <form method="get" style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+        <!-- Added label for search input -->
+        <label for="search">Search Tasks:</label>
+        <input id="search" type="text" name="q" value="{{ search_query }}" placeholder="Search tasks, descriptions, or projects..."
+               style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
+        <button type="submit" style="padding: 0.5rem 1rem; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            🔍 Search
+        </button>
+        {% if search_query %}
+            <!-- Fixed unresolved URL names -->
+            <a href="{% url 'task_list_cbv' %}" style="padding: 0.5rem 1rem; background: #95a5a6; color: white; text-decoration: none; border-radius: 4px;">
+                ❌ Clear
+            </a>
+        {% endif %}
+    </form>
+
+    {% if search_query %}
+        <p style="color: #2c3e50; font-weight: bold;">
+            🎯 Search Results for: "{{ search_query }}" ({{ tasks|length }} found)
+        </p>
+    {% endif %}
+</div>
+
+<!-- OVERALL AGGREGATIONS -->
+<div class="card">
+    <h2>📊 Overall Statistics</h2>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+        <div class="card" style="text-align: center; background: linear-gradient(135deg, #3498db, #2980b9); color: white;">
+            <h2 style="font-size: 2em; margin: 0;">{{ total_stats.total_tasks }}</h2>
+            <p style="margin: 0.5rem 0;">Total Tasks</p>
+        </div>
+        <div class="card" style="text-align: center; background: linear-gradient(135deg, #27ae60, #229954); color: white;">
+            <h2 style="font-size: 2em; margin: 0;">{{ total_stats.completed_tasks }}</h2>
+            <p style="margin: 0.5rem 0;">Completed</p>
+        </div>
+        <div class="card" style="text-align: center; background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;">
+            <h2 style="font-size: 2em; margin: 0;">{{ total_stats.overdue_count }}</h2>
+            <p style="margin: 0.5rem 0;">Overdue</p>
+        </div>
+    </div>
+</div>
+
+<!-- GROUPED AGGREGATIONS -->
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+    <!-- Tasks by Status -->
+    <div class="card">
+        <h3>📈 Tasks by Status</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa;">
+                    <th style="padding: 0.5rem; text-align: left; border: 1px solid #dee2e6;">Status</th>
+                    <th style="padding: 0.5rem; text-align: right; border: 1px solid #dee2e6;">Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for status in status_breakdown %}
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid #dee2e6;">{{ status.status_name }}</td>
+                        <td style="padding: 0.5rem; text-align: right; border: 1px solid #dee2e6; font-weight: bold;">{{ status.count }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="2" style="padding: 1rem; text-align: center; color: #6c757d;">No status data</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Tasks by Priority -->
+    <div class="card">
+        <h3>🎯 Tasks by Priority</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa;">
+                    <th style="padding: 0.5rem; text-align: left; border: 1px solid #dee2e6;">Priority</th>
+                    <th style="padding: 0.5rem; text-align: right; border: 1px solid #dee2e6;">Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for priority in priority_breakdown %}
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid #dee2e6;">
+                            <!-- Use CSS classes for priority badges instead of inline style -->
+                            <span class="priority-badge {% if priority.priority == 3 %}priority-high{% elif priority.priority == 2 %}priority-medium{% else %}priority-low{% endif %}" style="color: white; padding: 0.2rem 0.4rem; border-radius: 3px; font-size: 0.8rem;">
+                                {{ priority.priority_name }}
+                            </span>
+                        </td>
+                        <td style="padding: 0.5rem; text-align: right; border: 1px solid #dee2e6; font-weight: bold;">{{ priority.count }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="2" style="padding: 1rem; text-align: center; color: #6c757d;">No priority data</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Tasks by Project -->
+    <div class="card">
+        <h3>🗂️ Tasks by Project</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa;">
+                    <th style="padding: 0.5rem; text-align: left; border: 1px solid #dee2e6;">Project</th>
+                    <th style="padding: 0.5rem; text-align: right; border: 1px solid #dee2e6;">Total</th>
+                    <th style="padding: 0.5rem; text-align: right; border: 1px solid #dee2e6;">Done</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for project in project_breakdown %}
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid #dee2e6;">{{ project.name|truncatechars:20 }}</td>
+                        <td style="padding: 0.5rem; text-align: right; border: 1px solid #dee2e6; font-weight: bold;">{{ project.task_count }}</td>
+                        <td style="padding: 0.5rem; text-align: right; border: 1px solid #dee2e6; color: #27ae60;">{{ project.completed_count }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" style="padding: 1rem; text-align: center; color: #6c757d;">No project data</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- TASK LIST WITH CREATE BUTTON -->
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2>Task Results</h2>
+        <!-- fixed URL name -->
+        <a href="{% url 'task_create_cbv' %}" style="padding: 0.5rem 1rem; background: #27ae60; color: white; text-decoration: none; border-radius: 4px;">➕ Create New Task</a>
+    </div>
+
+    {% for task in tasks %}
+        <div class="card priority-{{ task.get_priority_display|lower }} status-{{ task.get_status_display|lower|cut:' ' }}">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                    <h4>{{ task.title }}</h4>
+                    <p>{{ task.description|truncatewords:15 }}</p>
+                    <p><strong>Project:</strong> {{ task.project.name }}</p>
+                </div>
+                <div style="text-align: right;">
+                    <!-- use CSS classes instead of inline template-based colors -->
+                    <span class="priority-badge {% if task.priority == 3 %}priority-high{% elif task.priority == 2 %}priority-medium{% else %}priority-low{% endif %}" style="color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">
+                        {{ task.get_priority_display }}
+                    </span>
+                    <br>
+                    <span class="status-badge {% if task.status == 1 %}status-todo{% elif task.status == 2 %}status-doing{% else %}status-done{% endif %}" style="color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-top: 0.25rem;">
+                        {{ task.get_status_display }}
+                    </span>
+                </div>
+            </div>
+            {% if task.due_date %}
+                <p><strong>Due:</strong> {{ task.due_date|date:"M d, Y" }}
+                {% if task.is_overdue %}
+                    <span style="color: #e74c3c; font-weight: bold;">⚠️ OVERDUE</span>
+                {% endif %}
+                </p>
+            {% endif %}
+            <p><small>Created: {{ task.created_at|date:"M d, Y H:i" }}</small></p>
+        </div>
+    {% empty %}
+        <div class="card" style="text-align: center; color: #6c757d; padding: 3rem;">
+            {% if search_query %}
+                <h4>🔍 No tasks found for "{{ search_query }}"</h4>
+                <p>Try searching for different keywords or check your spelling.</p>
+                <p>You can search by task title, description, or project name.</p>
+                <!-- fixed URL name -->
+                <a href="{% url 'task_list_cbv' %}" style="padding: 0.75rem 1.5rem; background: #3498db; color: white; text-decoration: none; border-radius: 4px; margin-top: 1rem; display: inline-block;">
+                    🔄 Show All Tasks
+                </a>
+            {% else %}
+                <h4>📝 No tasks found</h4>
+                <p>There are currently no tasks in the system.</p>
+                <p>Click the "Create New Task" button above to add your first task!</p>
+                <a href="{% url 'task_create_cbv' %}" style="padding: 0.75rem 1.5rem; background: #27ae60; color: white; text-decoration: none; border-radius: 4px; margin-top: 1rem; display: inline-block;">
+                    ➕ Create Your First Task
+                </a>
+            {% endif %}
+        </div>
+    {% endfor %}
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <div style="text-align: center; margin-top: 2rem;">
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}" style="margin: 0 0.5rem; padding: 0.5rem 1rem; background: #3498db; color: white; text-decoration: none; border-radius: 4px;">« First</a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" style="margin: 0 0.5rem; padding: 0.5rem 1rem; background: #3498db; color: white; text-decoration: none; border-radius: 4px;">‹ Previous</a>
+                {% endif %}
+
+                <span style="margin: 0 1rem; padding: 0.5rem 1rem; background: #e9ecef; border-radius: 4px;">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}" style="margin: 0 0.5rem; padding: 0.5rem 1rem; background: #3498db; color: white; text-decoration: none; border-radius: 4px;">Next ›</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}" style="margin: 0 0.5rem; padding: 0.5rem 1rem; background: #3498db; color: white; text-decoration: none; border-radius: 4px;">Last »</a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>🚀 Search & Aggregation Features</h3>
+    <ul>
+        <li><strong>Multi-field Search:</strong> Searches task titles, descriptions, and project names using Q() objects</li>
+        <li><strong>Overall Aggregations:</strong> Total tasks, completed count, overdue count using Count() and filter()</li>
+        <li><strong>Grouped Aggregations:</strong> Tasks by status, priority, and project using values().annotate()</li>
+        <li><strong>Query Optimization:</strong> Uses select_related('project') to prevent N+1 queries</li>
+        <li><strong>Pagination Persistence:</strong> Search terms preserved across pages</li>
+    </ul>
+</div>
+{% endblock %}
