@@ -14,6 +14,10 @@ Implemented class-based views (CBVs) alongside existing function-based views to 
 
 Extended the project with comprehensive comparison between BASE class-based views and GENERIC class-based views. Implemented manual View inheritance for statistics with explicit model queries, alongside Django's generic ListView, DetailView, and CreateView that automatically handle common patterns. This demonstrates the trade-off between control and convenience in Django's CBV architecture.
 
+## Assignment 7 Updates
+
+Implemented search/filtering and aggregations functionality to demonstrate Django's ORM capabilities. Added GET-based search form that filters tasks across multiple fields (title, description, project name) using Q() objects for OR logic. Implemented both overall aggregations (total tasks, completed count, overdue tasks) and grouped aggregations (tasks by project, tasks by status) with proper template rendering using {% for %}/{% empty %} blocks. This showcases QuerySet lazy evaluation, double-underscore field lookups, and Django's aggregation framework.
+
 ## Data Model
 
 ![ER Diagram](docs/notes/er_diagram.png)
