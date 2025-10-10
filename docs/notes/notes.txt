@@ -64,3 +64,134 @@
 - render() leverages Django's powerful template system for cleaner, more maintainable code
 - Both approaches can use the same underlying data and business logic
 - Template inheritance eliminates code duplication across pages
+
+# Assignment 6 - Base CBVs vs Generic CBVs Implementation
+
+## Difference Between Base CBVs and Generic CBVs
+
+### Base CBVs (inheriting from View)
+- **Manual Implementation**: Must implement get(), post(), etc. methods explicitly
+- **Explicit Queries**: Write all database queries manually (Task.objects.count(), Task.objects.filter())
+- **Custom Context**: Create context dictionaries with custom variable names
+- **Full Control**: Complete control over request/response cycle and data processing
+- **More Code**: Requires more boilerplate code but maximum flexibility
+
+### Generic CBVs (ListView, DetailView, CreateView)
+- **Automatic Implementation**: Django handles common patterns automatically
+- **Built-in Queries**: Automatic queryset handling based on model attribute
+- **Standard Context**: Uses default context names (object_list, object) or custom context_object_name
+- **Convention-based**: Follows Django conventions for template naming and behavior
+- **Less Code**: Minimal code required, built-in pagination, form handling, etc.
+
+## Why Generic Views Reduce Boilerplate
+
+### Before (Function-based or Base CBV):
+```python
+def task_list(request):
+    tasks = Task.objects.all().order_by('status', '-priority')
+    paginator = Paginator(tasks, 10)
+    page = request.GET.get('page')
+    tasks = paginator.get_page(page)
+    context = {'tasks': tasks}
+    return render(request, 'tasks/task_list.html', context)
+```
+
+### After (Generic ListView):
+```python
+class TaskListView(ListView):
+    model = Task
+    paginate_by = 10
+    ordering = ['status', '-priority']
+```
+
+- **Automatic pagination**: No need to write pagination logic
+- **Queryset handling**: Django automatically queries Task.objects.all()
+- **Context creation**: Automatic context with 'object_list' or custom name
+- **Template selection**: Follows convention (app/model_list.html) or custom template_name
+
+## Why Refactoring URLs Improves Maintainability
+
+### Before Refactoring (all URLs in project-level):
+- All app URLs mixed together in main urls.py
+- Hard to find and modify specific app routes
+- URL naming conflicts between apps
+- Difficult to reuse apps in other projects
+
+### After Refactoring (with include()):
+- **Separation of Concerns**: Each app manages its own URLs
+- **Modularity**: Apps are self-contained with their URL patterns
+- **Namespace Support**: Prevents URL name conflicts
+- **Reusability**: Apps can be easily moved between projects
+- **Maintainability**: Easier to find and modify URLs for specific features
+- **Team Development**: Different developers can work on different apps independently
+
+### URL Structure Benefits:
+```python
+# Project-level: Clean and focused
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', home, name='home'),
+    path('tasks/', include('tasks.urls')),  # Delegates to app
+]
+
+# App-level: Complete control over app routes
+urlpatterns = [
+    path('cbv/', TaskListView.as_view(), name='task_list_cbv'),
+    path('cbv/stats/', TaskStatsView.as_view(), name='task_stats_cbv'),
+]
+```
+
+## Implementation Choices Made
+
+### Base CBV (TaskStatsView):
+- Chose explicit model queries to demonstrate manual approach
+- Used custom context variable names ('stats_data') to show flexibility
+- Implemented only get() method for statistics display
+- Maintained full control over data processing and context creation
+
+### Generic CBVs:
+- **ListView**: Automatic pagination (10 per page), custom ordering, extended context
+- **DetailView**: Automatic object retrieval, related model data inclusion
+- **CreateView**: Automatic form generation, validation, success handling
+- Used context_object_name to override defaults for clarity
+
+### Template Strategy:
+- Extended base.html for all views maintaining consistency
+- Used {% for %} with {% empty %} for graceful empty state handling
+- Included {% url %} reverse lookups for maintainable navigation
+- Added clear indicators showing which type of view generated each page
+
+# Assignment 7 - Search/Filtering and Aggregations Implementation
+
+## Filtering vs Aggregation Concepts
+
+### Filtering (Narrowing Data)
+- **Purpose**: Reduces the number of rows returned from a queryset based on conditions
+- **Django Methods**: `.filter()`, `.exclude()`, `.get()`
+- **SQL Equivalent**: WHERE clause conditions
+- **Our Implementation**: Multi-field search using Q() objects across task title, description, and project name
+- **Result**: Returns a subset of Task objects that match the search criteria
+
+### Aggregation (Summarizing Data)
+- **Purpose**: Computes summary values across groups of data (counts, sums, averages)
+- **Django Methods**: `.count()`, `.aggregate()`, `.annotate()` with `Count()`, `Sum()`, `Avg()`
+- **SQL Equivalent**: GROUP BY clauses with aggregate functions
+- **Our Implementation**: Overall totals and grouped counts by status, priority, and project
+- **Result**: Returns computed summary statistics rather than individual objects
+
+## Specific Aggregation Summaries in Our Project
+
+### Overall Aggregations (Single Values)
+- **Total Tasks**: `Task.objects.count()` - Simple count of all tasks in system
+- **Completed Tasks**: `Task.objects.filter(status=Status.DONE).count()` - Count with filter condition
+- **Overdue Tasks**: Complex filter with date comparison and status exclusion for actionable overdue items
+
+### Grouped Aggregations (Counts by Category)
+- **Tasks by Status**: `Task.objects.values('status').annotate(count=Count('id'))` - Groups tasks by status field and counts each group
+- **Tasks by Priority**: `Task.objects.values('priority').annotate(count=Count('id'))` - Groups by priority level with count
+- **Tasks by Project**: `Project.objects.annotate(task_count=Count('tasks'))` - Counts tasks per project using reverse relationship
+
+## Query Optimization Techniques Used
+- **select_related('project')**: Prevents N+1 queries when displaying task project names in list view
+- **Q() Objects**: Enables OR logic for multi-field search across unrelated fields
+- **Lazy Evaluation**: QuerySets not executed until template iteration, allowing efficient chaining of filters and annotations
