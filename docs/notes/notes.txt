@@ -195,3 +195,59 @@ urlpatterns = [
 - **select_related('project')**: Prevents N+1 queries when displaying task project names in list view
 - **Q() Objects**: Enables OR logic for multi-field search across unrelated fields
 - **Lazy Evaluation**: QuerySets not executed until template iteration, allowing efficient chaining of filters and annotations
+
+# IP7 - Static Files and Data Visualization Implementation
+
+## Static Files Setup and Management
+
+### Directory Structure Created
+- **Static folder organization**: `tasks/static/tasks/css/`, `tasks/static/tasks/js/`, `tasks/static/tasks/img/`
+- **CSS file**: `style.css` with Illinois Blue (#13294B) and Orange (#FF5F05) theme
+- **Template integration**: Updated `base.html` with `{% load static %}` and `{% static 'tasks/css/style.css' %}`
+- **Bootstrap integration**: Added Bootstrap 5.1.3 for responsive grid system alongside custom CSS
+
+### Illinois Theme Implementation
+- **Primary colors**: Illinois Blue (#13294B) for navigation, headers, and primary buttons
+- **Accent colors**: Illinois Orange (#FF5F05) for highlights, warnings, and hover states
+- **Design elements**: Gradient backgrounds, custom button styling, card shadows, and responsive layout
+- **Typography**: Professional font stack with proper hierarchy and Illinois Blue color scheme
+
+## Data Visualization with Matplotlib and Plotly
+
+### Matplotlib Implementation (Server-side PNG)
+- **Chart generation**: Created pie charts (tasks by status) and bar charts (tasks by priority)
+- **Color scheme**: Applied Illinois colors ['#13294B', '#FF5F05', '#E8F4FD'] to maintain theme consistency
+- **Django integration**: Used `io.BytesIO()` to convert matplotlib figures to base64 strings for template embedding
+- **Backend configuration**: Set `matplotlib.use('Agg')` for non-interactive server-side rendering
+
+### Plotly Implementation (Client-side Interactive)
+- **Interactive charts**: Generated JSON-based bar charts for tasks per project with hover effects
+- **Django workflow**: ORM data → Plotly Figure → JSON serialization → Template → JavaScript rendering
+- **PlotlyJSONEncoder**: Used for proper JSON encoding of Plotly figure objects
+- **Client integration**: Embedded Plotly.js library and rendered charts with `Plotly.newPlot()`
+
+## Aggregation Queries Powering Visualizations
+
+### Chart Data Sources
+- **Status breakdown**: `Task.objects.values('status').annotate(count=Count('id'))` with Case/When for readable labels
+- **Priority analysis**: `Task.objects.values('priority').annotate(count=Count('id'))` ordered by priority level
+- **Project distribution**: `Project.objects.annotate(task_count=Count('tasks')).order_by('-task_count')[:5]` for top 5 projects
+
+### Django ORM to Chart Pipeline
+- **Data flow**: ORM QuerySet → Python data structures → Chart library (matplotlib/plotly) → Template rendering
+- **Optimization**: Used `.select_related()` and `.annotate()` for efficient database queries
+- **Template context**: Passed both raw data and processed chart objects to templates for flexible rendering
+
+## Static Files Pipeline Understanding
+
+### How {% static %} Works
+- **Template tag**: `{% load static %}` loads Django's static files template tags
+- **URL generation**: `{% static 'tasks/css/style.css' %}` generates correct URLs based on STATIC_URL setting
+- **Development vs Production**: Django serves static files in development; production requires `collectstatic`
+- **App-specific static**: Each app maintains its own static folder following convention `app_name/static/app_name/`
+
+### CSS Integration Strategy
+- **Base template**: Centralized static file loading in `base.html` for inheritance by all templates
+- **Custom properties**: Used CSS variables for consistent color theming across components
+- **Bootstrap integration**: Combined custom CSS with Bootstrap for responsive design without conflicts
+- **Performance**: Single CSS file minimizes HTTP requests while maintaining organized code structure

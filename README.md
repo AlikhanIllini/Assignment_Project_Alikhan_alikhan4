@@ -18,6 +18,10 @@ Extended the project with comprehensive comparison between BASE class-based view
 
 Implemented search/filtering and aggregations functionality to demonstrate Django's ORM capabilities. Added GET-based search form that filters tasks across multiple fields (title, description, project name) using Q() objects for OR logic. Implemented both overall aggregations (total tasks, completed count, overdue tasks) and grouped aggregations (tasks by project, tasks by status) with proper template rendering using {% for %}/{% empty %} blocks. This showcases QuerySet lazy evaluation, double-underscore field lookups, and Django's aggregation framework.
 
+## IP7 Updates
+
+Implemented static files management and data visualization features to demonstrate Django's static pipeline and chart generation capabilities. Added Illinois Blue and Orange theme styling using CSS custom properties, integrated Matplotlib for server-side PNG chart generation, and Plotly for interactive client-side visualizations. Created comprehensive charts dashboard showing task distribution by status, priority, and project using Django ORM aggregations with both overall totals and grouped breakdowns.
+
 ## Data Model
 
 ![ER Diagram](docs/notes/er_diagram.png)
