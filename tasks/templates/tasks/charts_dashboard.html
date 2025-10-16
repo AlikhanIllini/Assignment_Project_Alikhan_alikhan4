@@ -1,0 +1,288 @@
+{% extends "tasks/base.html" %}
+{% load static %}
+
+{% block title %}Charts Dashboard - Task Board{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="chart-title">📊 Data Visualization Dashboard</h1>
+        <p class="text-muted text-center mb-4">
+            Interactive charts powered by Django ORM aggregations, styled with Illinois Blue & Orange theme
+        </p>
+    </div>
+</div>
+
+<!-- Statistics Overview Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <div class="stats-number">{{ chart_data.status_data|length }}</div>
+                <div class="stats-label">Status Types</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <div class="stats-number">{{ chart_data.priority_data|length }}</div>
+                <div class="stats-label">Priority Levels</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <div class="stats-number">{{ chart_data.project_data|length }}</div>
+                <div class="stats-label">Active Projects</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <div class="stats-number">
+                    {% for item in chart_data.status_data %}{{ item.count|add:0 }}{% if not forloop.last %}+{% endif %}{% endfor %}
+                </div>
+                <div class="stats-label">Total Tasks</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Matplotlib Chart Section -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="chart-container">
+            <h3 class="chart-title">Matplotlib Charts (PNG)</h3>
+            <p class="text-muted text-center">
+                Generated server-side using <code>matplotlib</code> → Django view → Base64 → Template
+            </p>
+
+            <!-- Display the matplotlib chart -->
+            {% if matplotlib_chart %}
+                <div class="text-center">
+                    <img src="data:image/png;base64,{{ matplotlib_chart }}"
+                         class="img-fluid"
+                         alt="Matplotlib Charts"
+                         style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                </div>
+
+                <!-- Code snippet showing how it's generated -->
+                <div class="mt-4">
+                    <h5>📝 Code Snippet:</h5>
+                    <pre class="bg-light p-3 rounded"><code># Django View (Matplotlib PNG)
+def generate_matplotlib_chart(self, chart_data):
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+    # Illinois colors theme
+    illinois_colors = ['#13294B', '#FF5F05', '#E8F4FD']
+
+    # Pie chart: Tasks by Status
+    ax1.pie(status_counts, labels=status_labels, colors=illinois_colors)
+
+    # Bar chart: Tasks by Priority
+    ax2.bar(priority_labels, priority_counts)
+
+    # Convert to base64 for template
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    return base64.b64encode(buffer.getvalue()).decode('utf-8')</code></pre>
+                </div>
+            {% else %}
+                <div class="alert alert-warning" role="alert">
+                    <strong>No chart data available.</strong> Please add some tasks to see the visualization.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Plotly Interactive Chart Section -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="chart-container">
+            <h3 class="chart-title">Plotly Interactive Chart (JSON)</h3>
+            <p class="text-muted text-center">
+                Interactive chart using <code>plotly.js</code> → Django JSON → JavaScript rendering
+            </p>
+
+            <!-- Plotly chart div -->
+            <div id="plotly-chart" class="chart-loading">
+                Loading interactive chart...
+            </div>
+
+            <!-- Code snippet showing how it's generated -->
+            <div class="mt-4">
+                <h5>📝 Code Snippet:</h5>
+                <pre class="bg-light p-3 rounded"><code># Django View (Plotly JSON)
+def generate_plotly_chart(self, chart_data):
+    fig = go.Figure(data=[
+        go.Bar(
+            x=project_names,
+            y=project_counts,
+            marker_color=['#13294B', '#FF5F05', '#E8F4FD']
+        )
+    ])
+
+    fig.update_layout(title='Tasks per Project (Interactive)')
+    return json.dumps(fig, cls=PlotlyJSONEncoder)
+
+# Template JavaScript
+Plotly.newPlot('plotly-chart', {{ plotly_chart|safe }});</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Aggregation Data Tables -->
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📊 Tasks by Status</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th class="text-end">Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in chart_data.status_data %}
+                        <tr>
+                            <td>
+                                <span class="status-{{ item.status|lower }}">{{ item.status_name }}</span>
+                            </td>
+                            <td class="text-end"><strong>{{ item.count }}</strong></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-muted text-center">No data available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">🎯 Tasks by Priority</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Priority</th>
+                            <th class="text-end">Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in chart_data.priority_data %}
+                        <tr>
+                            <td>
+                                <span class="priority-{{ item.priority_name|lower }}">{{ item.priority_name }}</span>
+                            </td>
+                            <td class="text-end"><strong>{{ item.count }}</strong></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-muted text-center">No data available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📁 Tasks by Project</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Project</th>
+                            <th class="text-end">Tasks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in chart_data.project_data %}
+                        <tr>
+                            <td>{{ project.name|truncatechars:20 }}</td>
+                            <td class="text-end"><strong>{{ project.task_count }}</strong></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-muted text-center">No projects found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ORM Query Examples -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">🔍 Django ORM Aggregation Queries</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Status Breakdown:</h6>
+                        <pre class="bg-light p-2 small"><code>Task.objects.values('status').annotate(
+    count=Count('id'),
+    status_name=Case(
+        When(status=Status.TODO, then=Value('To Do')),
+        When(status=Status.DOING, then=Value('In Progress')),
+        When(status=Status.DONE, then=Value('Done'))
+    )
+).order_by('status')</code></pre>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Project Task Count:</h6>
+                        <pre class="bg-light p-2 small"><code>Project.objects.annotate(
+    task_count=Count('tasks')
+).order_by('-task_count')[:5]</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Plotly chart -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Render Plotly chart
+    var plotlyData = {{ plotly_chart|safe }};
+
+    if (plotlyData && plotlyData.data) {
+        Plotly.newPlot('plotly-chart', plotlyData.data, plotlyData.layout, {
+            responsive: true,
+            displayModeBar: true,
+            displaylogo: false,
+            modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+        });
+    } else {
+        document.getElementById('plotly-chart').innerHTML =
+            '<div class="alert alert-info">No project data available for interactive chart.</div>';
+    }
+});
+</script>
+
+{% endblock %}

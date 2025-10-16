@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 
 # Import class-based views
-from .views import TaskStatsView, TaskListView, ProjectDetailView, TaskCreateView
+from .views import TaskStatsView, TaskListView, ProjectDetailView, TaskCreateView, ChartsDashboardView
 
 urlpatterns = [
     # Function-based views (Assignment 4)
@@ -16,4 +16,8 @@ urlpatterns = [
     path('cbv/stats/', TaskStatsView.as_view(), name='task_stats_cbv'),
     path('cbv/project/<int:pk>/', ProjectDetailView.as_view(), name='project_detail_cbv'),
     path('cbv/create/', TaskCreateView.as_view(), name='task_create_cbv'),
+
+    # Data Visualization (Assignment 8)
+    path('charts/', ChartsDashboardView.as_view(), name='charts_dashboard'),
+    path('chart/matplotlib.png', views.matplotlib_chart_png, name='matplotlib_chart_png'),
 ]
