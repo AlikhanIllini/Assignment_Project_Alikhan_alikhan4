@@ -17,7 +17,7 @@ urlpatterns = [
     path('cbv/project/<int:pk>/', ProjectDetailView.as_view(), name='project_detail_cbv'),
     path('cbv/create/', TaskCreateView.as_view(), name='task_create_cbv'),
 
-    # Data Visualization (Assignment 8)
+    # Data Visualization (IP7)
     path('charts/', ChartsDashboardView.as_view(), name='charts_dashboard'),
     path('chart/matplotlib.png', views.matplotlib_chart_png, name='matplotlib_chart_png'),
 ]

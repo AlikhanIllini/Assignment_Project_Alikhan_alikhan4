@@ -251,3 +251,15 @@ urlpatterns = [
 - **Custom properties**: Used CSS variables for consistent color theming across components
 - **Bootstrap integration**: Combined custom CSS with Bootstrap for responsive design without conflicts
 - **Performance**: Single CSS file minimizes HTTP requests while maintaining organized code structure
+
+# Assignment 7 / IP7 - Static Files & Charts
+
+- **How static files work:** Django's `staticfiles` app finds static assets (CSS, JS, images) in each app's `static/` directory. The `{% static %}` template tag generates the correct URL for a file (e.g., `/static/tasks/css/style.css`), and the `collectstatic` command gathers all these files into a single directory for production.
+
+- **What the charts show:** The dashboard visualizes task distribution. A Matplotlib pie chart shows tasks by status (To Do, In Progress, Done), and a bar chart shows tasks by priority. An interactive Plotly bar chart displays the number of tasks per project.
+
+- **ORM Aggregation Used:** I used `Count()` with `annotate()` to group data. For example, `Project.objects.annotate(task_count=Count('tasks'))` calculates how many tasks belong to each project. This data is then passed to the charting libraries.
+
+- **`io.BytesIO()`:** This creates an in-memory binary buffer. Instead of saving a chart image to a file on the disk, Matplotlib saves it directly into this buffer. The buffer's content can then be read and encoded into a base64 string to be embedded directly in the HTML.
+
+- **`plt.tight_layout()`:** This Matplotlib function automatically adjusts the plot's padding and spacing to ensure that all elements (like titles, labels, and axes) fit neatly within the figure area without overlapping or being cut off.
