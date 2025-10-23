@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.db.models import Count, Q, Case, When, Value, CharField
@@ -6,6 +6,7 @@ from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, TemplateView
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django import forms
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
@@ -171,6 +172,39 @@ def tasks_by_priority(request, priority_level):
     }
 
     return render(request, 'tasks/tasks_by_priority.html', context)
+
+# ASSIGNMENT 8 - FORMS & POST (FBV)
+
+# Form definition for Task creation
+class TaskForm(forms.ModelForm):
+    """
+    ModelForm for creating/editing tasks
+    Provides automatic field generation and validation
+    """
+    class Meta:
+        model = Task
+        fields = ['title', 'description', 'project', 'priority', 'status', 'due_date']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 4}),
+            'due_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+# Function-Based View for Task Creation
+def task_create_fbv(request):
+    """
+    FBV for creating tasks using POST method
+    Demonstrates manual form handling with validation and CSRF protection
+    """
+    if request.method == 'POST':
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            task = form.save()
+            messages.success(request, f'Task "{task.title}" created successfully!')
+            return redirect('task_list_cbv')
+    else:
+        form = TaskForm()
+
+    return render(request, 'tasks/task_create_fbv.html', {'form': form})
 
 # ASSIGNMENT 6 - BASE and GENERIC CLASS-BASED VIEWS
 

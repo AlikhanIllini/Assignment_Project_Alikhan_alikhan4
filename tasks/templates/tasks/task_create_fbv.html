@@ -1,0 +1,85 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}Create Task - FBV{% endblock %}
+
+{% block header %}➕ Create New Task (Function-Based View){% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Create New Task</h2>
+    <p><em>This form is handled using a FUNCTION-BASED VIEW with manual POST/GET branching and form validation.</em></p>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                ✅ {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" style="max-width: 600px;">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {% for field in form %}
+            <div style="margin-bottom: 1rem;">
+                <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
+                    {{ field.label }}{% if field.field.required %} <span style="color: #e74c3c;">*</span>{% endif %}
+                </label>
+                {{ field }}
+                {% if field.errors %}
+                    <div style="color: #e74c3c; margin-top: 0.5rem; font-size: 0.9em;">
+                        {{ field.errors }}
+                    </div>
+                {% endif %}
+                {% if field.help_text %}
+                    <small style="color: #6c757d; display: block; margin-top: 0.25rem;">{{ field.help_text }}</small>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <button type="submit" style="padding: 0.75rem 1.5rem; background-color: #13294B; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem;">
+                ✅ Create Task
+            </button>
+            <a href="{% url 'task_list_cbv' %}" style="padding: 0.75rem 1.5rem; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">
+                ❌ Cancel
+            </a>
+        </div>
+    </form>
+
+    <div style="margin-top: 2rem; padding: 1rem; background: #e8f4fd; border-left: 4px solid #13294B;">
+        <strong>🔒 CSRF Protection:</strong>
+        <p style="margin-top: 0.5rem; color: #555;">
+            The <code>{% verbatim %}{% csrf_token %}{% endverbatim %}</code> tag prevents Cross-Site Request Forgery attacks by including a hidden token that Django validates on form submission.
+        </p>
+    </div>
+</div>
+
+<style>
+    input[type="text"],
+    input[type="date"],
+    textarea,
+    select {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+        outline: none;
+        border-color: #13294B;
+        box-shadow: 0 0 0 2px rgba(19, 41, 75, 0.1);
+    }
+</style>
+{% endblock %}
+
