@@ -189,6 +189,21 @@ class TaskForm(forms.ModelForm):
             'due_date': forms.DateInput(attrs={'type': 'date'}),
         }
 
+    def clean_title(self):
+        """
+        Custom validation for title field
+        Ensures title is not too short and doesn't contain only special characters
+        """
+        title = self.cleaned_data.get('title')
+        if title:
+            # Remove whitespace for validation
+            if len(title.strip()) < 3:
+                raise forms.ValidationError("Title must be at least 3 characters long.")
+            # Check if title contains at least one alphanumeric character
+            if not any(c.isalnum() for c in title):
+                raise forms.ValidationError("Title must contain at least one letter or number.")
+        return title
+
 # Function-Based View for Task Creation
 def task_create_fbv(request):
     """

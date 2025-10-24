@@ -196,6 +196,59 @@ urlpatterns = [
 - **Q() Objects**: Enables OR logic for multi-field search across unrelated fields
 - **Lazy Evaluation**: QuerySets not executed until template iteration, allowing efficient chaining of filters and annotations
 
+# Assignment 8 - Forms, GET vs POST, and FBV vs CBV Implementation
+
+## CSRF Protection
+- **What is CSRF**: Cross-Site Request Forgery is an attack where malicious websites trick users into submitting unintended requests to a trusted site where they're authenticated.
+- **Why CSRF Protection is Needed**: Without it, an attacker could create a fake form that submits to your Django app using the victim's cookies/session, performing actions without their consent.
+- **Django's CSRF Token**: Django generates a unique, secret token for each session that must be included in POST forms via {% csrf_token %}, preventing unauthorized form submissions.
+- **How It Works**: Django checks that the CSRF token in the POST request matches the token stored in the user's session; if they don't match, the request is rejected with a 403 error.
+
+## Django Form Submission Process
+- **Step 1 - Form Rendering (GET)**: View instantiates an empty form and renders it in a template with {% csrf_token %} included automatically.
+- **Step 2 - User Submission (POST)**: User fills out form and submits; browser sends POST request with form data and CSRF token to server.
+- **Step 3 - CSRF Validation**: Django middleware checks CSRF token before the view is even called; rejects request if token is invalid.
+- **Step 4 - Form Validation**: View receives POST data, binds it to form object, calls is_valid() which runs field validators and clean methods.
+- **Step 5 - Processing**: If valid, view saves/processes data and redirects; if invalid, re-renders form with bound data and error messages.
+- **Step 6 - Success Handling**: After successful submission, redirect to success page using redirect() or success_url to prevent duplicate submissions on refresh.
+
+## Function-Based Views vs Class-Based Views for Forms
+
+### FBV Pros
+- **Explicit Control**: Every step is visible - you write if request.method == 'POST' and handle each case manually.
+- **Easier to Understand**: Linear flow is straightforward for beginners; clear separation of GET and POST logic.
+- **Flexibility**: Can easily handle complex logic, multiple forms, or non-standard workflows without fighting framework conventions.
+
+### FBV Cons
+- **More Boilerplate**: Must manually check request method, instantiate forms, validate, save, and redirect each time.
+- **Code Duplication**: Similar patterns repeated across multiple views (form instantiation, validation checking, error handling).
+- **Less Reusable**: Hard to extend or override specific behaviors without copying entire function.
+
+### CBV Pros
+- **Less Code**: Generic views like CreateView handle form instantiation, validation, saving, and redirects automatically.
+- **Reusability**: Can inherit from base classes and override only specific methods (e.g., form_valid() for custom success logic).
+- **Convention-Based**: Follows Django patterns with automatic template naming, context variables, and success URL handling.
+
+### CBV Cons
+- **Steeper Learning Curve**: Must understand method resolution order (MRO), which methods to override, and Django's class hierarchy.
+- **Less Explicit**: Logic is hidden in parent classes; harder to debug and understand what's happening behind the scenes.
+- **Overkill for Simple Cases**: For very simple forms or unique workflows, writing a CBV can be more complex than a straightforward FBV.
+
+## When to Use GET vs POST
+
+### Use GET When:
+- **Reading/Searching**: Filtering, searching, or querying data without modifying server state (e.g., search forms).
+- **Bookmarkable URLs**: Query parameters appear in URL (?q=search), allowing users to bookmark and share results.
+- **Idempotent Operations**: Multiple identical GET requests should return the same result without side effects.
+- **No Sensitive Data**: GET parameters are visible in URL, browser history, and server logs - never use for passwords or private info.
+
+### Use POST When:
+- **Creating/Modifying Data**: Any operation that changes database state (creating tasks, updating profiles, deleting records).
+- **Sensitive Information**: Passwords, credit cards, or personal data that shouldn't appear in URLs or logs.
+- **Non-Idempotent Operations**: Actions that shouldn't be repeated accidentally (e.g., submitting a payment or creating a resource).
+- **Large Data**: POST body has no size limit unlike GET URL parameters which browsers/servers may truncate.
+- **CSRF Protection Required**: POST forms can include CSRF tokens to prevent unauthorized submissions; GET forms cannot be CSRF-protected.
+
 # IP7 - Static Files and Data Visualization Implementation
 
 ## Static Files Setup and Management

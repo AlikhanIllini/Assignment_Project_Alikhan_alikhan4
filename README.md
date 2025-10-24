@@ -22,6 +22,10 @@ Implemented search/filtering and aggregations functionality to demonstrate Djang
 
 Implemented static files management and data visualization features to demonstrate Django's static pipeline and chart generation capabilities. Added Illinois Blue and Orange theme styling using CSS custom properties, integrated Matplotlib for server-side PNG chart generation, and Plotly for interactive client-side visualizations. Created comprehensive charts dashboard showing task distribution by status, priority, and project using Django ORM aggregations with both overall totals and grouped breakdowns.
 
+## Assignment 8 Updates
+
+Implemented comprehensive form handling demonstrating GET vs POST methods and comparing Function-Based Views with Class-Based Views. **GET vs POST in this project**: GET is used for the search/filter functionality where query parameters appear in the URL (?q=search) allowing bookmarkable results, while POST is used for task creation forms with CSRF protection to securely submit data that modifies the database. **FBV vs CBV for forms**: The Function-Based View (task_create_fbv) provides explicit control with manual if/else branching for GET/POST methods, making the flow easy to understand but requiring more boilerplate code, while the Class-Based View (TaskCreateView) uses Django's generic CreateView to automatically handle form instantiation, validation, and success redirection with minimal code but requiring understanding of Django's class hierarchy and method overriding.
+
 ## Data Model
 
 ![ER Diagram](docs/notes/er_diagram.png)
