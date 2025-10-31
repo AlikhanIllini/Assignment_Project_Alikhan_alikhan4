@@ -299,6 +299,151 @@ urlpatterns = [
 - **Development vs Production**: Django serves static files in development; production requires `collectstatic`
 - **App-specific static**: Each app maintains its own static folder following convention `app_name/static/app_name/`
 
+# Assignment 9 - JSON APIs and Server-Side Chart Generation
+
+## What is a JSON API?
+
+### Definition and Purpose
+- **JSON API**: An HTTP endpoint that returns data in JSON (JavaScript Object Notation) format instead of HTML
+- **Purpose**: Enables data exchange between systems (frontend ↔ backend, mobile apps, third-party integrations)
+- **Structure**: Typically returns structured data with `count` and `results` keys for collections
+- **RESTful Principles**: Uses URL patterns to represent resources (e.g., `/api/tasks/`, `/api/stats/`)
+
+### Why JSON APIs Matter
+- **Separation of Concerns**: Data layer decoupled from presentation - API serves data, frontend renders it
+- **Multiple Consumers**: Same API can serve web apps, mobile apps, desktop apps, and other services
+- **Machine-Readable**: JSON is easy for programs to parse and generate (unlike HTML meant for humans)
+- **Framework-Agnostic**: Any language/framework can consume JSON APIs (Python, JavaScript, Swift, Kotlin, etc.)
+
+## HttpResponse vs JsonResponse
+
+### HttpResponse (Generic Response)
+- **Content Type**: Defaults to `text/html` but can be set to any MIME type (`text/plain`, `image/png`, `application/pdf`)
+- **Manual Serialization**: You must convert Python data to strings manually
+- **Use Cases**:
+  - HTML pages: `HttpResponse("<html>...</html>")`
+  - Plain text: `HttpResponse("ok: true", content_type="text/plain")`
+  - Binary data: `HttpResponse(image_bytes, content_type="image/png")`
+- **Flexibility**: Complete control over content and headers but requires more manual work
+
+### JsonResponse (Specialized for JSON)
+- **Content Type**: Automatically sets `Content-Type: application/json`
+- **Automatic Serialization**: Converts Python dicts/lists to JSON automatically using `json.dumps()`
+- **Safe Mode**: By default, only allows dicts (not lists) as top-level objects to prevent security issues
+- **Use Cases**:
+  - API endpoints: `JsonResponse({'count': 10, 'results': [...]})`
+  - AJAX responses: `JsonResponse({'success': True, 'message': 'Saved!'})`
+- **Convenience**: Less code and automatic handling of JSON encoding
+
+### Key Difference Example
+```python
+# HttpResponse (manual)
+data = {'ok': True}
+return HttpResponse(json.dumps(data), content_type='application/json')
+
+# JsonResponse (automatic)
+return JsonResponse({'ok': True})
+```
+
+### MIME Type Impact
+- **Browser Rendering**: `application/json` triggers browser's JSON formatter/viewer
+- **API Clients**: Libraries like `requests` or `urllib` check Content-Type to parse response correctly
+- **JavaScript**: `fetch()` and `$.ajax()` automatically parse `application/json` responses to objects
+
+## Server-Side Chart Data Flow
+
+### Architecture Overview
+**Django View → API Request → JSON Parsing → Matplotlib → PNG Response**
+
+### Step-by-Step Process
+
+1. **Chart View Receives Request**
+   - User requests `/api/chart.png`
+   - Django routes to `task_chart_png(request)` view
+
+2. **Build API URL**
+   - Use `reverse('task_stats_api')` to get relative path (e.g., `/tasks/api/stats/`)
+   - Use `request.build_absolute_uri(api_path)` to create full URL (e.g., `http://127.0.0.1:8000/tasks/api/stats/`)
+   - This allows view to call its own server's API
+
+3. **Fetch JSON from API (Server-Side)**
+   - Use `urllib.request.urlopen(api_url)` to make HTTP GET request to our API
+   - **Important**: This is server-to-server, NOT JavaScript in browser
+   - Python code fetches JSON before sending response to browser
+
+4. **Parse JSON Data**
+   - Use `json.load(response)` to convert JSON string to Python dict
+   - Extract needed data: `data['status_breakdown']`, `data['overall']`, etc.
+   - This data came from Django ORM queries in the API view
+
+5. **Generate Chart with Matplotlib**
+   - Create figure: `fig, axes = plt.subplots(2, 2, figsize=(14, 10))`
+   - Plot data: pie charts for status, bar charts for priority, text for stats
+   - Style with Illinois colors and formatting
+
+6. **Convert Chart to PNG Bytes**
+   - Create buffer: `buffer = io.BytesIO()`
+   - Save figure to buffer: `plt.savefig(buffer, format='png', dpi=100)`
+   - Get raw bytes: `buffer.getvalue()`
+
+7. **Return as HttpResponse**
+   - Return: `HttpResponse(buffer.getvalue(), content_type='image/png')`
+   - Browser receives PNG image and displays it
+   - Can be embedded in HTML: `<img src="{% url 'task_chart_png' %}">`
+
+### What the Chart Shows
+- **Status Distribution**: Pie chart showing proportion of tasks in To Do / In Progress / Done
+- **Priority Breakdown**: Bar chart showing count of Low/Medium/High priority tasks
+- **Overall Statistics**: Text display of total tasks, completed, pending, overdue, and completion rate
+- **Top Projects**: Horizontal bar chart of projects with most tasks
+
+### Why This Architecture?
+- **No JavaScript Required**: Chart generation happens on server, browser just displays image
+- **Consistent Styling**: Matplotlib renders same way regardless of browser
+- **API Reusability**: Chart view consumes same API that could be used by mobile apps or JavaScript
+- **Separation of Concerns**: Data aggregation (API) separated from visualization (chart view)
+- **Simple Client**: Browser only needs to support `<img>` tags, no chart libraries needed
+
+### Data Flow Diagram
+```
+User Browser
+    ↓ GET /api/demo/
+Django View (api_chart_demo)
+    ↓ render template
+Template includes <img src="/api/chart.png">
+    ↓ Browser requests image
+Django View (task_chart_png)
+    ↓ urllib.request.urlopen()
+Django API (task_stats_api)
+    ↓ ORM queries
+Database
+    ↑ Task data
+Django API
+    ↑ JSON response
+Django View (task_chart_png)
+    ↓ matplotlib + io.BytesIO
+PNG bytes
+    ↑ HttpResponse(content_type="image/png")
+User Browser displays chart
+```
+
+## Function-Based vs Class-Based API Views
+
+### FBV API (tasks_api, task_stats_api)
+- **Explicit Control**: Direct function that returns JsonResponse
+- **Simple Pattern**: Check request.method if needed, query database, return JSON
+- **Less Abstraction**: Clear what's happening in each line of code
+
+### CBV API (TaskStatsAPIView)
+- **Inheritance**: Extends `View` class and implements `get(self, request)` method
+- **Reusability**: Can override dispatch(), add mixins, implement post/put/delete easily
+- **Consistency**: Follows Django's CBV pattern for better organization
+- **Scalability**: Easier to add authentication, permissions, throttling as methods
+
+### When to Use Each
+- **FBV**: Simple APIs with minimal logic, one-off endpoints, learning purposes
+- **CBV**: Complex APIs with shared behavior, REST-style endpoints with multiple HTTP methods, team projects with conventions
+
 ### CSS Integration Strategy
 - **Base template**: Centralized static file loading in `base.html` for inheritance by all templates
 - **Custom properties**: Used CSS variables for consistent color theming across components

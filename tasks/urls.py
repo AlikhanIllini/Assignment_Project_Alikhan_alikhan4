@@ -1,10 +1,7 @@
 from django.urls import path
 from . import views
-
-from django.urls import path
-from . import views
 # Import class-based views
-from .views import TaskStatsView, TaskListView, ProjectDetailView, TaskCreateView, ChartsDashboardView
+from .views import TaskStatsView, TaskListView, ProjectDetailView, TaskCreateView, ChartsDashboardView, TaskStatsAPIView
 
 urlpatterns = [
     # Function-based views (Assignment 4)
@@ -24,4 +21,14 @@ urlpatterns = [
 
     # Data Visualization (IP7)
     path('charts/', ChartsDashboardView.as_view(), name='charts_dashboard'),
+
+    # JSON API Endpoints (Assignment 9)
+    path('api/tasks/', views.tasks_api, name='tasks_api'),  # FBV - All tasks
+    path('api/stats/', views.task_stats_api, name='task_stats_api'),  # FBV - Statistics
+    path('api/stats/cbv/', TaskStatsAPIView.as_view(), name='task_stats_api_cbv'),  # CBV - Statistics
+    path('api/chart.png', views.task_chart_png, name='task_chart_png'),  # Server-side PNG chart
+
+    # HttpResponse vs JsonResponse Demo (Assignment 9)
+    path('api/ping/', views.api_ping, name='api_ping'),  # JsonResponse
+    path('api/ping/text/', views.api_ping_text, name='api_ping_text'),  # HttpResponse
 ]

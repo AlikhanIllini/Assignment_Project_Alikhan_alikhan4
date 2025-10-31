@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.db.models import Count, Q, Case, When, Value, CharField
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, TemplateView
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.contrib import messages
 from django import forms
 import matplotlib
@@ -16,6 +16,8 @@ import json
 import plotly
 import plotly.graph_objs as go
 from plotly.utils import PlotlyJSONEncoder
+import urllib.request
+import urllib.error
 
 from tasks.models import Project, Task, Status, Priority
 
@@ -400,34 +402,60 @@ class ChartsDashboardView(TemplateView):
     def get_chart_data(self):
         """
         Gathers and aggregates all data needed for the charts.
+        Returns keys compatible with both the template (status_data/priority_data/project_data)
+        and the plotting helpers (status_breakdown/priority_breakdown/project_breakdown).
         """
-        # Group by status
-        status_breakdown = (
+        # Group by status with human-readable name
+        status_qs = (
             Task.objects
             .values('status')
-            .annotate(count=Count('id'))
+            .annotate(
+                count=Count('id'),
+                status_name=Case(
+                    When(status=Status.TODO, then=Value('To Do')),
+                    When(status=Status.DOING, then=Value('In Progress')),
+                    When(status=Status.DONE, then=Value('Done')),
+                    default=Value('Unknown'),
+                    output_field=CharField(),
+                ),
+            )
             .order_by('status')
         )
 
-        # Group by priority
-        priority_breakdown = (
+        # Group by priority with human-readable name
+        priority_qs = (
             Task.objects
             .values('priority')
-            .annotate(count=Count('id'))
+            .annotate(
+                count=Count('id'),
+                priority_name=Case(
+                    When(priority=Priority.LOW, then=Value('Low')),
+                    When(priority=Priority.MED, then=Value('Medium')),
+                    When(priority=Priority.HIGH, then=Value('High')),
+                    default=Value('Unknown'),
+                    output_field=CharField(),
+                ),
+            )
             .order_by('priority')
         )
 
         # Group by project
-        project_breakdown = (
+        project_qs = (
             Project.objects
             .annotate(task_count=Count('tasks'))
             .order_by('-task_count')[:5]
         )
 
         return {
-            'status_breakdown': list(status_breakdown),
-            'priority_breakdown': list(priority_breakdown),
-            'project_breakdown': list(project_breakdown),
+            # For template compatibility
+            'status_data': list(status_qs),
+            'priority_data': list(priority_qs),
+            'project_data': list(project_qs),  # model instances with .name and .task_count
+
+            # For plotting helpers
+            'status_breakdown': list(status_qs),
+            'priority_breakdown': list(priority_qs),
+            'project_breakdown': list(project_qs),
         }
 
     def generate_matplotlib_chart(self, chart_data):
@@ -435,32 +463,43 @@ class ChartsDashboardView(TemplateView):
         Generates a Matplotlib chart (pie + bar) and returns it as a base64 string.
         """
         # --- Data Preparation ---
-        status_labels = [Status(item['status']).label for item in chart_data['status_breakdown']]
-        status_counts = [item['count'] for item in chart_data['status_breakdown']]
+        status_labels = [Status(item['status']).label if isinstance(item, dict) else Status(item.status).label for item in chart_data['status_breakdown']]
+        status_counts = [item['count'] if isinstance(item, dict) else item.count for item in chart_data['status_breakdown']]
 
-        priority_labels = [Priority(item['priority']).label for item in chart_data['priority_breakdown']]
-        priority_counts = [item['count'] for item in chart_data['priority_breakdown']]
+        priority_labels = [Priority(item['priority']).label if isinstance(item, dict) else Priority(item.priority).label for item in chart_data['priority_breakdown']]
+        priority_counts = [item['count'] if isinstance(item, dict) else item.count for item in chart_data['priority_breakdown']]
 
         # --- Charting ---
         plt.style.use('seaborn-v0_8-talk')
         illinois_colors = ['#13294B', '#FF5F05', '#E8F4FD', '#000000'] # Blue, Orange, Gray, Black
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-        fig.suptitle('Task Distribution Overview', fontsize=16, fontweight='bold')
 
-        # Pie chart for status
+        # Plot 1: Status Distribution (Pie Chart)
+        status_data = chart_data['status_breakdown']
+        status_labels = [Status(item['status']).label for item in status_data]
+        status_counts = [item['count'] for item in status_data]
+
         ax1.set_title('Tasks by Status', fontsize=12)
-        ax1.pie(
-            status_counts,
-            labels=status_labels,
-            autopct='%1.1f%%',
-            startangle=90,
-            colors=illinois_colors[:len(status_labels)],
-            wedgeprops={'edgecolor': 'white', 'linewidth': 2}
-        )
-        ax1.axis('equal')
+        if sum(status_counts) > 0:
+            ax1.pie(
+                status_counts,
+                labels=status_labels,
+                autopct='%1.1f%%',
+                startangle=90,
+                colors=illinois_colors[:len(status_labels)],
+                wedgeprops={'edgecolor': 'white', 'linewidth': 2}
+            )
+            ax1.axis('equal')
+        else:
+            ax1.text(0.5, 0.5, 'No tasks to display', ha='center', va='center')
+            ax1.axis('off')
 
-        # Bar chart for priority
+        # Plot 2: Tasks by Priority (Bar Chart)
+        priority_data = chart_data['priority_breakdown']
+        priority_labels = [Priority(item['priority']).label for item in priority_data]
+        priority_counts = [item['count'] for item in priority_data]
+
         ax2.set_title('Tasks by Priority', fontsize=12)
         ax2.bar(priority_labels, priority_counts, color=illinois_colors[:len(priority_labels)])
         ax2.set_ylabel('Number of Tasks')
@@ -501,3 +540,334 @@ class ChartsDashboardView(TemplateView):
         )
 
         return json.dumps(fig, cls=PlotlyJSONEncoder)
+
+
+# IP9 - JSON API ENDPOINTS AND SERVER-SIDE CHART GENERATION
+
+def tasks_api(request):
+    """
+    JSON API endpoint that returns all tasks with their details.
+    Uses JsonResponse for automatic JSON serialization and proper Content-Type.
+    """
+    try:
+        tasks = Task.objects.select_related('project').all()
+
+        tasks_data = []
+        for task in tasks:
+            tasks_data.append({
+                'id': task.id,
+                'title': task.title,
+                'description': task.description,
+                'project': task.project.name,
+                'priority': task.get_priority_display(),
+                'priority_value': task.priority,
+                'status': task.get_status_display(),
+                'status_value': task.status,
+                'due_date': task.due_date.isoformat() if task.due_date else None,
+                'is_overdue': task.is_overdue,
+                'created_at': task.created_at.isoformat(),
+            })
+
+        # JsonResponse automatically sets Content-Type: application/json
+        return JsonResponse({
+            'count': len(tasks_data),
+            'results': tasks_data
+        })
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e),
+            'status': 'error'
+        }, status=500)
+
+
+def task_stats_api(request):
+    """
+    JSON API endpoint that returns task statistics and aggregations.
+    Uses JsonResponse for proper JSON response with correct MIME type.
+    """
+    try:
+        # Overall aggregations
+        total_tasks = Task.objects.count()
+        completed_tasks = Task.objects.filter(status=Status.DONE).count()
+        overdue_tasks = Task.objects.filter(
+            due_date__lt=timezone.localdate(),
+            status__in=[Status.TODO, Status.DOING]
+        ).count()
+
+        # Status breakdown
+        status_breakdown = []
+        for status_item in Task.objects.values('status').annotate(count=Count('id')).order_by('status'):
+            status_breakdown.append({
+                'status': Status(status_item['status']).label,
+                'status_value': status_item['status'],
+                'count': status_item['count']
+            })
+
+        # Priority breakdown
+        priority_breakdown = []
+        for priority_item in Task.objects.values('priority').annotate(count=Count('id')).order_by('priority'):
+            priority_breakdown.append({
+                'priority': Priority(priority_item['priority']).label,
+                'priority_value': priority_item['priority'],
+                'count': priority_item['count']
+            })
+
+        # Project breakdown
+        project_breakdown = []
+        for project in Project.objects.annotate(task_count=Count('tasks')).order_by('-task_count'):
+            project_breakdown.append({
+                'id': project.id,
+                'name': project.name,
+                'task_count': project.task_count
+            })
+
+        return JsonResponse({
+            'count': total_tasks,
+            'results': {
+                'overall': {
+                    'total_tasks': total_tasks,
+                    'completed_tasks': completed_tasks,
+                    'pending_tasks': total_tasks - completed_tasks,
+                    'overdue_tasks': overdue_tasks,
+                    'completion_rate': round((completed_tasks / total_tasks * 100), 1) if total_tasks > 0 else 0
+                },
+                'status_breakdown': status_breakdown,
+                'priority_breakdown': priority_breakdown,
+                'project_breakdown': project_breakdown
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e),
+            'status': 'error'
+        }, status=500)
+
+
+def api_ping(request):
+    """
+    JsonResponse demo - Returns JSON with proper Content-Type: application/json
+    Automatically serializes Python dict to JSON
+    """
+    try:
+        return JsonResponse({
+            "ok": True,
+            "message": "API is working!",
+            "timestamp": timezone.now().isoformat()
+        })
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e),
+            'status': 'error'
+        }, status=500)
+
+
+def api_ping_text(request):
+    """
+    HttpResponse demo - Returns plain text with Content-Type: text/plain
+    Must manually format the response string
+    """
+    try:
+        return HttpResponse(
+            "ok: true\n"
+            "message: API is working (plain text)\n"
+            f"timestamp: {timezone.now().isoformat()}\n",
+            content_type="text/plain"
+        )
+    except Exception as e:
+        return HttpResponse(
+            f"error: {str(e)}\n"
+            "status: error\n",
+            content_type="text/plain",
+            status=500
+        )
+
+
+# CLASS-BASED API VIEW
+class TaskStatsAPIView(View):
+    """
+    Class-based API view that returns task statistics as JSON.
+    Demonstrates CBV approach to API endpoints with JsonResponse.
+    """
+    def get(self, request):
+        try:
+            # Aggregate statistics
+            total_tasks = Task.objects.count()
+            completed_tasks = Task.objects.filter(status=Status.DONE).count()
+            overdue_tasks = Task.objects.filter(
+                due_date__lt=timezone.localdate(),
+                status__in=[Status.TODO, Status.DOING]
+            ).count()
+
+            # Status breakdown
+            status_breakdown = []
+            for status_item in Task.objects.values('status').annotate(count=Count('id')).order_by('status'):
+                status_breakdown.append({
+                    'status': Status(status_item['status']).label,
+                    'count': status_item['count']
+                })
+
+            # Return JSON response
+            return JsonResponse({
+                'count': total_tasks,
+                'results': {
+                    'total_tasks': total_tasks,
+                    'completed_tasks': completed_tasks,
+                    'pending_tasks': total_tasks - completed_tasks,
+                    'overdue_tasks': overdue_tasks,
+                    'completion_rate': round((completed_tasks / total_tasks * 100), 1) if total_tasks > 0 else 0,
+                    'status_breakdown': status_breakdown
+                }
+            })
+        except Exception as e:
+            return JsonResponse({
+                'error': str(e),
+                'status': 'error'
+            }, status=500)
+
+def task_chart_png(request):
+    """
+    Server-side chart generation view that:
+    1. Fetches data from our task_stats_api (with a short timeout)
+    2. Falls back to local ORM aggregation if the API call fails (avoids dev-server deadlocks)
+    3. Supports forcing local aggregation via query param (?local=1 or ?src=local)
+    4. Uses matplotlib to create a visualization and returns PNG
+    """
+    try:
+        # Decide data source
+        src = (request.GET.get('src') or '').lower()
+        force_local = request.GET.get('local') == '1' or src in {'local', 'db'}
+
+        data = None
+        if not force_local:
+            # Build absolute URL for the API endpoint
+            api_path = reverse('task_stats_api')
+            api_url = request.build_absolute_uri(api_path)
+
+            # Try to fetch JSON data from our API (server-side) with a short timeout
+            try:
+                with urllib.request.urlopen(api_url, timeout=1.0) as response:
+                    data = json.load(response)
+            except Exception:
+                data = None
+
+        if data is None:
+            # Fallback: compute the same data structure locally
+            data = {'results': _compute_task_stats_results()}
+
+        # Create matplotlib figure
+        plt.style.use('seaborn-v0_8-talk')
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
+
+        # Plot 1: Status Distribution (Pie Chart)
+        status_data = data['results']['status_breakdown']
+        status_labels = [item['status'] for item in status_data]
+        status_counts = [item['count'] for item in status_data]
+
+        if sum(status_counts) > 0:
+            ax1.pie(status_counts, labels=status_labels, autopct='%1.1f%%',
+                    colors=['#13294B', '#FF5F05', '#E8F4FD'],
+                    wedgeprops={'edgecolor': 'white', 'linewidth': 2})
+            ax1.set_title('Task Status Distribution')
+        else:
+            ax1.text(0.5, 0.5, 'No tasks to display', ha='center', va='center')
+            ax1.set_title('Task Status Distribution')
+            ax1.axis('off')
+
+        # Plot 2: Tasks Overview (Bar Chart)
+        overview = data['results']['overall']
+        metrics = ['Total', 'Completed', 'Pending', 'Overdue']
+        values = [
+            overview['total_tasks'],
+            overview['completed_tasks'],
+            overview['pending_tasks'],
+            overview['overdue_tasks']
+        ]
+
+        bars = ax2.bar(metrics, values, color=['#13294B', '#28a745', '#FF5F05', '#dc3545'])
+        ax2.set_title('Task Overview')
+        ax2.grid(axis='y', linestyle='--', alpha=0.7)
+
+        # Add value labels on bars
+        for bar in bars:
+            height = bar.get_height()
+            ax2.text(bar.get_x() + bar.get_width()/2., height,
+                    f'{int(height):,}',
+                    ha='center', va='bottom')
+
+        plt.tight_layout()
+
+        # Save to BytesIO buffer
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+        plt.close(fig)
+        buffer.seek(0)
+
+        # Return as PNG image
+        return HttpResponse(buffer.getvalue(), content_type='image/png')
+
+    except Exception as e:
+        # If anything goes wrong, return a placeholder error image
+        plt.figure(figsize=(10, 6))
+        plt.text(0.5, 0.5, f'Error generating chart:\n{str(e)}',
+                ha='center', va='center', wrap=True)
+        plt.axis('off')
+
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', dpi=100)
+        plt.close()
+        buffer.seek(0)
+
+        return HttpResponse(buffer.getvalue(), content_type='image/png', status=500)
+
+def _compute_task_stats_results():
+    """
+    Local fallback: compute the same data structure returned under 'results' by task_stats_api.
+    This avoids deadlock when the dev server can't serve a nested HTTP request.
+    """
+    # Overall aggregations
+    total_tasks = Task.objects.count()
+    completed_tasks = Task.objects.filter(status=Status.DONE).count()
+    overdue_tasks = Task.objects.filter(
+        due_date__lt=timezone.localdate(),
+        status__in=[Status.TODO, Status.DOING]
+    ).count()
+
+    # Status breakdown
+    status_breakdown = []
+    for status_item in Task.objects.values('status').annotate(count=Count('id')).order_by('status'):
+        status_breakdown.append({
+            'status': Status(status_item['status']).label,
+            'status_value': status_item['status'],
+            'count': status_item['count']
+        })
+
+    # Priority breakdown
+    priority_breakdown = []
+    for priority_item in Task.objects.values('priority').annotate(count=Count('id')).order_by('priority'):
+        priority_breakdown.append({
+            'priority': Priority(priority_item['priority']).label,
+            'priority_value': priority_item['priority'],
+            'count': priority_item['count']
+        })
+
+    # Project breakdown
+    project_breakdown = []
+    for project in Project.objects.annotate(task_count=Count('tasks')).order_by('-task_count'):
+        project_breakdown.append({
+            'id': project.id,
+            'name': project.name,
+            'task_count': project.task_count
+        })
+
+    return {
+        'overall': {
+            'total_tasks': total_tasks,
+            'completed_tasks': completed_tasks,
+            'pending_tasks': total_tasks - completed_tasks,
+            'overdue_tasks': overdue_tasks,
+            'completion_rate': round((completed_tasks / total_tasks * 100), 1) if total_tasks > 0 else 0
+        },
+        'status_breakdown': status_breakdown,
+        'priority_breakdown': priority_breakdown,
+        'project_breakdown': project_breakdown
+    }
