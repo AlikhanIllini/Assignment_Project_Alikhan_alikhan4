@@ -26,6 +26,10 @@ Implemented static files management and data visualization features to demonstra
 
 Implemented comprehensive form handling demonstrating GET vs POST methods and comparing Function-Based Views with Class-Based Views. **GET vs POST in this project**: GET is used for the search/filter functionality where query parameters appear in the URL (?q=search) allowing bookmarkable results, while POST is used for task creation forms with CSRF protection to securely submit data that modifies the database. **FBV vs CBV for forms**: The Function-Based View (task_create_fbv) provides explicit control with manual if/else branching for GET/POST methods, making the flow easy to understand but requiring more boilerplate code, while the Class-Based View (TaskCreateView) uses Django's generic CreateView to automatically handle form instantiation, validation, and success redirection with minimal code but requiring understanding of Django's class hierarchy and method overriding.
 
+## Assignment 9 Updates
+
+Implemented JSON API endpoints and server-side chart generation to demonstrate Django's JsonResponse capabilities and the difference between HttpResponse and JsonResponse. Created both function-based and class-based API views: `/api/tasks/` returns all tasks with count and results structure, `/api/stats/` provides aggregated statistics including overall totals and breakdowns by status/priority/project, and `/api/stats/cbv/` demonstrates the same functionality using a CBV approach. Built server-side chart generation view that fetches data from the JSON API using urllib.request, parses it with json.load(), generates matplotlib visualizations, and returns PNG images via HttpResponse with image/png content type. Added demonstration endpoints `/api/ping/` (JsonResponse with application/json) and `/api/ping/text/` (HttpResponse with text/plain) to clearly illustrate MIME type differences and automatic JSON serialization versus manual string formatting.
+
 ## Data Model
 
 ![ER Diagram](docs/notes/er_diagram.png)

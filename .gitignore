@@ -1,0 +1,14 @@
+# Ignore presentation assets
+# screenshots
+/docs/images/*.png
+/docs/images/*.jpg
+/docs/images/*.jpeg
+
+# generated/handout presentations
+/docs/*presentation*.html
+/docs/*presentation*.md
+
+# local caches
+__pycache__/
+*.pyc
+
