@@ -1,0 +1,154 @@
+{% extends "tasks/base.html" %}
+{% load static %}
+
+{% block title %}API + Server-Side Chart Demo{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>📊 API + Server-Side Chart Demo</h1>
+    <p class="lead">This page demonstrates JSON API consumption and server-side chart generation.</p>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5>🔗 JSON API Endpoints</h5>
+                </div>
+                <div class="card-body">
+                    <p>Our app exposes the following JSON endpoints:</p>
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <strong>All Tasks (FBV):</strong><br>
+                            <a href="{% url 'tasks_api' %}" target="_blank">{% url 'tasks_api' %}</a>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Task Statistics (FBV):</strong><br>
+                            <a href="{% url 'task_stats_api' %}" target="_blank">{% url 'task_stats_api' %}</a>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Task Statistics (CBV):</strong><br>
+                            <a href="{% url 'task_stats_api_cbv' %}" target="_blank">{% url 'task_stats_api_cbv' %}</a>
+                        </li>
+                    </ul>
+                    <div class="alert alert-info mt-3">
+                        <strong>💡 Tip:</strong> Click the links above to view the raw JSON data in your browser.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5>📈 Data Flow</h5>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <li><strong>API Request:</strong> View builds absolute URL using <code>build_absolute_uri(reverse(...))</code></li>
+                        <li><strong>Fetch JSON:</strong> Server fetches data with <code>urllib.request.urlopen()</code></li>
+                        <li><strong>Parse Data:</strong> JSON parsed with <code>json.load()</code></li>
+                        <li><strong>Generate Chart:</strong> Matplotlib creates visualization</li>
+                        <li><strong>Return PNG:</strong> <code>HttpResponse(..., content_type="image/png")</code></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5>🖼️ Server-Side Generated Chart (from API)</h5>
+                </div>
+                <div class="card-body text-center">
+                    <p>Charts are generated server-side through the ChartsDashboardView:</p>
+                    <p class="mb-3">
+                        <a href="{% url 'charts_dashboard' %}" class="btn btn-primary">
+                            View Full Chart Dashboard
+                        </a>
+                    </p>
+                    <div class="alert alert-success">
+                        <strong>✅ Server-Side Charts:</strong> Visit the Chart Dashboard to see matplotlib and plotly charts
+                        generated using the task data through the Django ORM.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5>📝 HttpResponse vs JsonResponse</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Aspect</th>
+                                <th>HttpResponse</th>
+                                <th>JsonResponse</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>MIME Type</strong></td>
+                                <td><code>text/html</code> (default) or custom</td>
+                                <td><code>application/json</code> (automatic)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Serialization</strong></td>
+                                <td>Manual (you convert data to string)</td>
+                                <td>Automatic (JSON encoding)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Use Case</strong></td>
+                                <td>HTML pages, images, PDFs, custom content</td>
+                                <td>API endpoints returning JSON data</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Example</strong></td>
+                                <td><code>HttpResponse(html_string)</code><br><code>HttpResponse(png_bytes, content_type="image/png")</code></td>
+                                <td><code>JsonResponse({'key': 'value'})</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Live Demo</strong></td>
+                                <td><a href="{% url 'api_ping_text' %}" target="_blank">🔗 View Plain Text Response</a></td>
+                                <td><a href="{% url 'api_ping' %}" target="_blank">🔗 View JSON Response</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="alert alert-warning mt-3">
+                        <strong>⚠️ Try Both:</strong> Click the "Live Demo" links above to see the difference in how browsers render
+                        <code>text/plain</code> vs <code>application/json</code> content types.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 text-center">
+        <a href="{% url 'task_board' %}" class="btn btn-primary">← Back to Task Board</a>
+        <a href="{% url 'charts_dashboard' %}" class="btn btn-secondary">View Chart Dashboard</a>
+    </div>
+</div>
+
+<style>
+    .card {
+        margin-bottom: 1.5rem;
+        border-radius: 8px;
+    }
+    .card-header {
+        font-weight: bold;
+    }
+    code {
+        background-color: #f8f9fa;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d63384;
+    }
+</style>
+{% endblock %}
+
