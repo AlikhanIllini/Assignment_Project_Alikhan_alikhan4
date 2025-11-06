@@ -31,4 +31,8 @@ urlpatterns = [
     # HttpResponse vs JsonResponse Demo (Assignment 9)
     path('api/ping/', views.api_ping, name='api_ping'),  # JsonResponse
     path('api/ping/text/', views.api_ping_text, name='api_ping_text'),  # HttpResponse
+
+    # External API Integration (IP10)
+    path('api/ext/quote/', views.quote_api, name='quote_api'),  # JSON API endpoint
+    path('quote/', views.quote_display, name='quote_display'),  # HTML display view
 ]

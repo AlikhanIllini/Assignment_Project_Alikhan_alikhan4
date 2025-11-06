@@ -18,6 +18,7 @@ import plotly.graph_objs as go
 from plotly.utils import PlotlyJSONEncoder
 import urllib.request
 import urllib.error
+import requests
 
 from tasks.models import Project, Task, Status, Priority
 
@@ -871,3 +872,173 @@ def _compute_task_stats_results():
         'priority_breakdown': priority_breakdown,
         'project_breakdown': project_breakdown
     }
+# IP10 - EXTERNAL API INTEGRATION (QUOTABLE API)
+
+def quote_api(request):
+    """
+    JSON API endpoint that fetches a random motivational quote from DummyJSON API.
+    Demonstrates external API integration with requests.get(), error handling, and timeout.
+    Falls back to local mock data if API is unavailable.
+
+    Returns:
+        JsonResponse with quote data or error information
+    """
+    # Fallback quotes if API is unavailable
+    fallback_quotes = [
+        {"quote": "The only way to do great work is to love what you do.", "author": "Steve Jobs"},
+        {"quote": "Success is not final, failure is not fatal: it is the courage to continue that counts.", "author": "Winston Churchill"},
+        {"quote": "Believe you can and you're halfway there.", "author": "Theodore Roosevelt"},
+        {"quote": "The future belongs to those who believe in the beauty of their dreams.", "author": "Eleanor Roosevelt"},
+        {"quote": "It does not matter how slowly you go as long as you do not stop.", "author": "Confucius"},
+    ]
+
+    try:
+        # External API endpoint - DummyJSON Quotes (keyless, free, reliable API)
+        # Documentation: https://dummyjson.com/docs/quotes
+        api_url = "https://dummyjson.com/quotes/random"
+
+        # Make GET request with timeout to prevent hanging
+        response = requests.get(api_url, timeout=5)
+
+        # Check if request was successful
+        response.raise_for_status()
+
+        # Parse JSON response
+        data = response.json()
+
+        # Extract relevant fields and trim unnecessary data
+        quote_data = {
+            'content': data.get('quote'),
+            'author': data.get('author'),
+            'tags': [],  # DummyJSON doesn't have tags, but we keep structure consistent
+            'length': len(data.get('quote', '')),
+            'api_source': 'DummyJSON Quotes API',
+            'success': True,
+            'fallback': False
+        }
+
+        return JsonResponse(quote_data)
+
+    except requests.exceptions.Timeout:
+        return JsonResponse({
+            'error': 'Request timed out',
+            'message': 'The external API took too long to respond',
+            'success': False
+        }, status=504)
+
+    except requests.exceptions.ConnectionError:
+        # Return fallback data instead of error
+        import random
+        fallback = random.choice(fallback_quotes)
+        return JsonResponse({
+            'content': fallback['quote'],
+            'author': fallback['author'],
+            'tags': ['inspirational'],
+            'length': len(fallback['quote']),
+            'api_source': 'Fallback Data (API Unavailable)',
+            'success': True,
+            'fallback': True
+        })
+
+    except requests.exceptions.HTTPError as e:
+        return JsonResponse({
+            'error': 'HTTP error',
+            'message': f'The API returned an error: {e.response.status_code}',
+            'success': False
+        }, status=e.response.status_code)
+
+    except Exception as e:
+        # Return fallback data for any unexpected error
+        import random
+        fallback = random.choice(fallback_quotes)
+        return JsonResponse({
+            'content': fallback['quote'],
+            'author': fallback['author'],
+            'tags': ['inspirational'],
+            'length': len(fallback['quote']),
+            'api_source': 'Fallback Data (Error Occurred)',
+            'success': True,
+            'fallback': True
+        })
+
+
+def quote_display(request):
+    """
+    HTML view that displays a motivational quote from DummyJSON API.
+    Demonstrates how to integrate external API data into Django templates.
+    Falls back to local mock data if API is unavailable.
+
+    Shows both the raw JSON response and a formatted HTML display.
+    """
+    # Fallback quotes if API is unavailable
+    fallback_quotes = [
+        {"quote": "The only way to do great work is to love what you do.", "author": "Steve Jobs"},
+        {"quote": "Success is not final, failure is not fatal: it is the courage to continue that counts.", "author": "Winston Churchill"},
+        {"quote": "Believe you can and you're halfway there.", "author": "Theodore Roosevelt"},
+        {"quote": "The future belongs to those who believe in the beauty of their dreams.", "author": "Eleanor Roosevelt"},
+        {"quote": "It does not matter how slowly you go as long as you do not stop.", "author": "Confucius"},
+    ]
+
+    quote_data = None
+    error_message = None
+
+    try:
+        # External API endpoint - DummyJSON Quotes
+        # Documentation: https://dummyjson.com/docs/quotes
+        api_url = "https://dummyjson.com/quotes/random"
+
+        # Make request with timeout
+        response = requests.get(api_url, timeout=5)
+        response.raise_for_status()
+
+        # Parse and extract data
+        data = response.json()
+        quote_data = {
+            'content': data.get('quote'),
+            'author': data.get('author'),
+            'tags': ['inspirational'],  # DummyJSON doesn't have tags
+            'length': len(data.get('quote', '')),
+            'api_source': 'DummyJSON Quotes API',
+            'fallback': False
+        }
+
+    except requests.exceptions.Timeout:
+        error_message = 'Request timed out. The external API took too long to respond.'
+
+    except requests.exceptions.ConnectionError:
+        # Use fallback data instead of showing error
+        import random
+        fallback = random.choice(fallback_quotes)
+        quote_data = {
+            'content': fallback['quote'],
+            'author': fallback['author'],
+            'tags': ['inspirational'],
+            'length': len(fallback['quote']),
+            'api_source': 'Fallback Data (API Unavailable - Network Issue)',
+            'fallback': True
+        }
+
+    except requests.exceptions.HTTPError as e:
+        error_message = f'HTTP error: The API returned status code {e.response.status_code}.'
+
+    except Exception as e:
+        # Use fallback data for unexpected errors
+        import random
+        fallback = random.choice(fallback_quotes)
+        quote_data = {
+            'content': fallback['quote'],
+            'author': fallback['author'],
+            'tags': ['inspirational'],
+            'length': len(fallback['quote']),
+            'api_source': 'Fallback Data (Error Occurred)',
+            'fallback': True
+        }
+
+    context = {
+        'quote_data': quote_data,
+        'error_message': error_message,
+        'api_url': 'https://dummyjson.com/quotes/random',
+        'api_name': 'DummyJSON Quotes API',
+    }
+
+    return render(request, 'tasks/quote_display.html', context)
