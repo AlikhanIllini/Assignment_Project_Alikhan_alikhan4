@@ -1,0 +1,264 @@
+/* Task Board CSS - Illinois Blue and Orange Theme */
+
+:root {
+    --illinois-blue: #13294B;
+    --illinois-orange: #FF5F05;
+    --light-blue: #E8F4FD;
+    --white: #FFFFFF;
+    --gray: #6C757D;
+    --light-gray: #F8F9FA;
+    --success: #28A745;
+    --warning: #FFC107;
+    --danger: #DC3545;
+}
+
+/* Base Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--light-blue) 0%, var(--white) 100%);
+    color: var(--illinois-blue);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+/* Navigation Bar */
+.navbar {
+    background: linear-gradient(135deg, var(--illinois-blue) 0%, #1a3f6b 100%);
+    box-shadow: 0 4px 12px rgba(19, 41, 75, 0.15);
+    padding: 1rem 0;
+}
+
+.navbar-brand {
+    color: var(--white) !important;
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.navbar-nav .nav-link {
+    color: var(--white) !important;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    color: var(--illinois-orange) !important;
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, var(--illinois-blue) 0%, #1a3f6b 100%);
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #1a3f6b 0%, var(--illinois-blue) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(19, 41, 75, 0.3);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--illinois-orange) 0%, #ff7530 100%);
+    border: none;
+    color: var(--white);
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #ff7530 0%, var(--illinois-orange) 100%);
+    color: var(--white);
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    background: var(--white);
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--light-blue) 0%, var(--white) 100%);
+    border-bottom: 2px solid var(--illinois-blue);
+    font-weight: bold;
+    color: var(--illinois-blue);
+    border-radius: 12px 12px 0 0 !important;
+}
+
+/* Statistics Cards */
+.stats-card {
+    background: linear-gradient(135deg, var(--white) 0%, var(--light-blue) 100%);
+    border-left: 4px solid var(--illinois-orange);
+    transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+    border-left: 6px solid var(--illinois-orange);
+    transform: translateX(4px);
+}
+
+.stats-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--illinois-blue);
+}
+
+.stats-label {
+    color: var(--gray);
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+}
+
+/* Search Form */
+.search-form {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+}
+
+.form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--illinois-blue);
+    box-shadow: 0 0 0 0.2rem rgba(19, 41, 75, 0.25);
+}
+
+/* Tables */
+.table {
+    background: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.table thead th {
+    background: var(--illinois-blue);
+    color: var(--white);
+    font-weight: 600;
+    border: none;
+    padding: 1rem;
+}
+
+.table tbody tr:hover {
+    background: var(--light-blue);
+}
+
+/* Priority Badges */
+.priority-high {
+    background: var(--danger);
+    color: var(--white);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.priority-medium {
+    background: var(--warning);
+    color: var(--illinois-blue);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.priority-low {
+    background: var(--success);
+    color: var(--white);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* Status Badges */
+.status-todo {
+    background: var(--gray);
+    color: var(--white);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+.status-doing {
+    background: var(--illinois-orange);
+    color: var(--white);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+.status-done {
+    background: var(--success);
+    color: var(--white);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+/* Chart Container */
+.chart-container {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin: 2rem 0;
+}
+
+.chart-title {
+    color: var(--illinois-blue);
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .stats-number {
+        font-size: 2rem;
+    }
+
+    .search-form {
+        padding: 1rem;
+    }
+
+    .chart-container {
+        padding: 1rem;
+    }
+}
+
+/* Animation for loading charts */
+.chart-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 400px;
+    font-size: 1.2rem;
+    color: var(--gray);
+}
+
+/* Illinois Logo Styling */
+.illinois-logo {
+    height: 40px;
+    width: auto;
+    margin-right: 10px;
+}
