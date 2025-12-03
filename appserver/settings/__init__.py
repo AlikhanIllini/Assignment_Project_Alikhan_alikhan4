@@ -1,2 +1,2 @@
-# Settings package marker
+# Settings package
 

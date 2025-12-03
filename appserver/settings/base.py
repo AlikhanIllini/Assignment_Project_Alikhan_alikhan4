@@ -3,11 +3,9 @@ Base settings for appserver project.
 """
 from pathlib import Path
 
-# Project root (manage.py level)
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DATA_DIR = BASE_DIR / "data"
 
-# Core Django settings
 SECRET_KEY = 'django-insecure-1_$ljq=#0%l33^&%v!6@kbnl*^yunjf_9%lb!_(%5gu^5(_lck'
 DEBUG = False
 ALLOWED_HOSTS = []
@@ -80,4 +78,3 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/tasks/'
 LOGOUT_REDIRECT_URL = '/login/'
-

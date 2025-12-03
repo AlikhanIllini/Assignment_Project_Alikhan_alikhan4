@@ -10,4 +10,3 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 CSRF_TRUSTED_ORIGINS = [f"https://{ALLOWED_HOSTS[0]}"]
-
